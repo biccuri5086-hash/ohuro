@@ -50,6 +50,67 @@ export function parseAuditMarkers(body) {
   return results;
 }
 
+// Codex（GitHub 連携）が要約コメントに埋め込む機械可読な状態（2026-11-17 に実物で確認。D-008）:
+//   <!-- codex-review-state:v1 {"code_review":{"commit_sha":"<40桁>","has_any_findings":false,
+//        "has_unresolved_findings":false,"status":"completed"},"security_review":{...}} -->
+// JSON の波括弧は HTML 文字参照（&#123; &#125;）で書かれている。
+const CODEX_STATE_RE = /<!--\s*codex-review-state:v1\s+([\s\S]*?)\s*-->/;
+const CODEX_REVIEW_KINDS = ["code_review", "security_review"];
+
+function decodeEntities(s) {
+  return s
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+/** Codex の状態コメントを読み取る。該当なしは null、解析不能は {invalid: true} */
+export function parseCodexReviewState(body) {
+  if (typeof body !== "string") return null;
+  const m = body.match(CODEX_STATE_RE);
+  if (!m) return null;
+  try {
+    const parsed = JSON.parse(decodeEntities(m[1]));
+    return parsed && typeof parsed === "object" ? parsed : { invalid: true };
+  } catch {
+    return { invalid: true };
+  }
+}
+
+/**
+ * Codex 標準形式の状態を、現在の head に対するゲート判定に変換する。head に対する結果がなければ null。
+ * - 実行中 → pending
+ * - 未解決の指摘あり → failure（重大度は標準形式から判別できないため、すべてブロック）
+ * - 指摘があったが同一コミットのまま「解決済み」→ 人間の確認ラベル audit:medium-accepted が必要
+ *   （PR 作成者がスレッドを解決するだけでゲートを通過できないようにするため）
+ * - 指摘なしで完了 → success
+ */
+export function evaluateCodexState(state, headSha, labelSet = new Set()) {
+  if (!state) return null;
+  if (state.invalid) return { state: "failure", description: "Codex の監査状態を解析できません" };
+  const reviews = CODEX_REVIEW_KINDS.map((k) => [k, state[k]]).filter(
+    ([, r]) => r && typeof r.commit_sha === "string" && /^[0-9a-f]{40}$/i.test(r.commit_sha) && headMatches(r.commit_sha, headSha),
+  );
+  if (reviews.length === 0) return null;
+  if (reviews.some(([, r]) => r.status !== "completed")) {
+    return { state: "pending", description: "Codex の監査が実行中です" };
+  }
+  if (reviews.some(([, r]) => r.has_unresolved_findings !== false)) {
+    return { state: "failure", description: "Codex の未解決の指摘があります。修正して再監査を受けてください" };
+  }
+  if (reviews.some(([, r]) => r.has_any_findings === true) && !labelSet.has("audit:medium-accepted")) {
+    return {
+      state: "failure",
+      description: "Codex の指摘が同一コミットで解決済みにされています。人間の確認（audit:medium-accepted）が必要です",
+    };
+  }
+  if (!reviews.some(([k]) => k === "code_review")) return null;
+  return { state: "success", description: "Codex 監査通過（標準形式・未解決の指摘なし）" };
+}
+
 function headMatches(markerHead, headSha) {
   if (!markerHead || !headSha) return false;
   const a = markerHead.toLowerCase();
@@ -82,12 +143,21 @@ export function evaluateAuditGate({ headSha, labels, entries, config }) {
     .sort((x, y) => String(x.at).localeCompare(String(y.at)));
 
   const allMarkers = [];
+  const nativeForHead = [];
   for (const e of trusted) {
     for (const m of parseAuditMarkers(e.body)) allMarkers.push({ ...m, at: e.at });
+    const native = evaluateCodexState(parseCodexReviewState(e.body), headSha, labelSet);
+    if (native) nativeForHead.push({ ...native, at: e.at });
   }
 
   const forHead = allMarkers.filter((m) => headMatches(m.head, headSha));
   const latest = forHead.at(-1);
+  const latestNative = nativeForHead.at(-1);
+
+  // Codex 標準形式の結果が ohuro-audit ブロックより新しい（または唯一の）場合はそちらを採用する
+  if (latestNative && (!latest || String(latestNative.at) >= String(latest.at))) {
+    return { state: latestNative.state, description: latestNative.description };
+  }
 
   if (!latest) {
     return {

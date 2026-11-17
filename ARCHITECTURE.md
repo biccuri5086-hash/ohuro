@@ -96,4 +96,6 @@ flowchart TB
 - 判定コードは常にデフォルトブランチのものを使い、PR のコードは実行しない（`pull_request_target` の安全な使い方）。
 - **限界**: 同じリポジトリ内の PR はワークフローを書き換えられるため、悪意ある変更で status を偽装する余地が残る。
   ハーネス変更には `approved:harness-change` ラベルと人間のレビューを必須にして緩和する（SECURITY.md 残存リスク）。
-- **未検証**: Codex が本書式どおりにマーカーを出力するか、Codex のボットアカウント名。初回の実監査で確認する。
+- **確認済み（D-008）**: Codex のボット名は `chatgpt-codex-connector[bot]`。Codex は `ohuro-audit` ブロックを出力せず、
+  標準の `codex-review-state:v1` で結果を返すため、Audit Gate は両方の形式を読む（AGENTS.md）。
+- Audit Gate の判定コードはデフォルトブランチのものが使われるため、判定ロジックの変更はマージ後の PR から有効になる。

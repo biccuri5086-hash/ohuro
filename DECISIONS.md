@@ -115,3 +115,22 @@ AI（Claude Code / Codex）は「提案」までしか記録できない。状�
   (2) TypeScript 7 は typescript-eslint の対応範囲外（D-003）、`@types/node` 26 は実行環境 Node 22 と不一致
 - 影響する文書・コード: `.github/dependabot.yml`, RELEASE_CHECKLIST.md（A-6）
 - 見直し条件: typescript-eslint が TypeScript 7 に対応した時、または Node の実行バージョンを上げる時
+
+## D-008: Codex 監査の実地確認と Audit Gate の標準形式対応
+- 日付: 2026-11-17
+- 状態: 提案
+- 種別: ハーネス
+- 提案者: Claude Code
+- 承認者: 未承認（本記録を含む PR のラベル `approved:harness-change` とマージで確定）
+- 承認の証跡: PR #6 のコメント（Codex の要約コメントと「Didn't find any major issues」）
+- 確認できた事実（D-004 の未検証事項）:
+  - Codex は GitHub App「ChatGPT Codex Connector」経由で動作し、投稿者は `chatgpt-codex-connector[bot]`（`.github/audit-gate.json` の設定と一致）
+  - `@codex review` で起動。Draft 中・連携設定前の依頼（2回）には反応せず、所有者が Cowork で連携を確認した後の依頼で動作した
+  - 結果は AGENTS.md の報告書式（`ohuro-audit` ブロック・未検証項目）ではなく、Codex 標準形式で返る。
+    要約コメントに `codex-review-state:v1` の状態（commit_sha・status・has_any_findings・has_unresolved_findings）が含まれる
+  - head `2731e76` の監査結果: 指摘なし
+- 変更内容: Audit Gate が `codex-review-state:v1` も読むようにした（判定は AGENTS.md）。Claude の権限で GitHub のレビュースレッド解決操作を deny
+- 変更理由: 標準形式のままでは Audit Gate が pending から進まず、Codex の監査結果をマージ条件にできないため
+- 既知の制約: 判定コードはデフォルトブランチのものが使われるため、本変更を含む PR 自身には適用されない（この PR は人間の確認が必要）。
+  標準形式では修正ループの回数を Audit Gate で数えられない（CLAUDE.md の規則で運用）
+- 影響する文書・コード: scripts/harness/audit-gate.mjs, tests/harness/audit-gate.test.mjs, .claude/settings.json, AGENTS.md, ARCHITECTURE.md, SECURITY.md
