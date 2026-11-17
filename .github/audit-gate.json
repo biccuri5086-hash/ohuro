@@ -1,0 +1,5 @@
+{
+  "_comment": "監査結果を信頼する GitHub ログイン。PR作成者（Claude Code が使うアカウント）を絶対に含めないこと。Codex のボット名は初回の実監査で確認し、DECISIONS.md に記録してから確定する。",
+  "auditors": ["chatgpt-codex-connector[bot]"],
+  "maxAuditRounds": 3
+}
