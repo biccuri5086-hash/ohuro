@@ -16,6 +16,7 @@
   - Dismiss stale approvals / Require conversation resolution: 有効
 - [ ] Require status checks to pass（Require branches to be up to date: 有効）
   - `quality`（CI）
+  - `db-test`（CI。2026-11-17 追加、Issue #9）
   - `dependency-audit`（CI）
   - `guard`（PR Guard）
   - `audit-gate / independent-audit`（Audit Gate が設定する commit status）
