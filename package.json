@@ -1,0 +1,35 @@
+{
+  "name": "ohuro-quest",
+  "version": "0.0.0",
+  "private": true,
+  "description": "おふろクエスト — 入浴習慣化ゲーム型PWA（ハーネス構築段階）",
+  "engines": {
+    "node": ">=22.12.0 <23"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check:secrets": "node scripts/harness/secret-scan.mjs",
+    "check:policy": "node scripts/harness/policy-check.mjs",
+    "check:migrations": "node scripts/harness/migration-check.mjs",
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run check:secrets && npm run check:policy && npm run check:migrations && npm run build"
+  },
+  "dependencies": {
+    "next": "16.4.6",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "eslint": "10.15.0",
+    "eslint-config-next": "16.4.6",
+    "typescript": "6.0.3",
+    "vitest": "5.1.0"
+  }
+}
