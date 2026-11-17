@@ -103,6 +103,11 @@ describe("evaluateAuditGate", () => {
   it("Codex 標準形式: 指摘なしで完了なら success", () => {
     expect(run([entry(codexState())]).state).toBe("success");
   });
+  it("Codex 標準形式: REST API が返す生の波括弧の形式も読める", () => {
+    const raw = codexState().replace(/&#123;/g, "{").replace(/&#125;/g, "}");
+    expect(raw).toContain('codex-review-state:v1 {"code_review"');
+    expect(run([entry(raw)]).state).toBe("success");
+  });
   it("Codex 標準形式: 実行中は pending", () => {
     expect(run([entry(codexState({ status: "running", has_any_findings: null, has_unresolved_findings: null }))]).state).toBe("pending");
   });
