@@ -52,6 +52,20 @@
 - [ ] 投稿したボットのログイン名を `.github/audit-gate.json` と DECISIONS.md（D-004）に反映
 - [ ] 監査結果に `ohuro-audit` ブロックが含まれることを確認（含まれない場合は D-004 の代替案を選択）
 
+#### Codex が `@codex review` に反応しないとき（所有者が確認）
+受け付けると、通常は依頼コメントに 👀 のリアクションが付く（未検証の想定。初回確認時に本書を更新する）。
+反応がない場合は次を順に確認する。
+1. Codex の設定画面で、リポジトリ `biccuri5086-hash/ohuro` の Code review が有効になっている
+2. GitHub App「ChatGPT Codex Connector」のインストール対象にこのリポジトリが含まれている（GitHub → Settings → Applications）
+3. 依頼コメントを投稿した GitHub アカウントが、Codex を使う ChatGPT アカウントと連携している
+4. PR が Draft ではない
+それでも動かない場合は D-004 の代替案から選び、DECISIONS.md に記録する。
+
+### A-6. 日常運用の注意
+- Dependabot など自動作成された PR は、マージ前に base が `main` であることを確認する。
+  `main` 以外を base とする PR はブランチ保護・必須チェックの対象外になる（2026-11-17 に発生。D-007）
+- 監査依頼後に head を変更すると、それまでの監査は無効になる（Audit Gate は head SHA ごとに判定）
+
 ## B. Gate 通過チェック（各 Gate 共通。記録は `docs/gates/GATE_<n>.md`）
 
 - [ ] 完成した機能が Gate の範囲と一致し、範囲外の実装がない

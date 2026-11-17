@@ -102,3 +102,16 @@ AI（Claude Code / Codex）は「提案」までしか記録できない。状�
   経路は vitest / vite / eslint-config-next の開発依存のみで本番バンドルに含まれないが、全 PR がマージ不可になったため
 - 影響する文書・コード: `.github/workflows/ci.yml`, TEST_PLAN.md, SECURITY.md（R-7）
 - 見直し条件: 修正版の公開時、または本番依存に同種の脆弱性が入った時
+
+## D-007: Dependabot の更新対象とマージ先の固定
+- 日付: 2026-11-17
+- 状態: 提案
+- 種別: ハーネス
+- 提案者: Claude Code
+- 承認者: 未承認（本記録を含む PR のラベル `approved:harness-change` とマージで確定）
+- 承認の証跡: 本記録を含む PR
+- 変更内容: `.github/dependabot.yml` に `target-branch: main` を追加。`typescript` と `@types/node` のメジャー更新を対象外にする
+- 変更理由: (1) `main` 作成前に作られた Dependabot PR #1〜#4 の base が作業ブランチになり、ブランチ保護と必須チェックを通らずに作業ブランチへマージされた（#1, #2）。
+  (2) TypeScript 7 は typescript-eslint の対応範囲外（D-003）、`@types/node` 26 は実行環境 Node 22 と不一致
+- 影響する文書・コード: `.github/dependabot.yml`, RELEASE_CHECKLIST.md（A-6）
+- 見直し条件: typescript-eslint が TypeScript 7 に対応した時、または Node の実行バージョンを上げる時
