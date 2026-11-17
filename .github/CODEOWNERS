@@ -1,0 +1,9 @@
+# ハーネス・権限・CI・管理文書の変更は人間（所有者）の確認対象
+*                     @biccuri5086-hash
+/.github/             @biccuri5086-hash
+/.claude/             @biccuri5086-hash
+/scripts/harness/     @biccuri5086-hash
+/supabase/migrations/ @biccuri5086-hash
+/CLAUDE.md            @biccuri5086-hash
+/AGENTS.md            @biccuri5086-hash
+/DECISIONS.md         @biccuri5086-hash

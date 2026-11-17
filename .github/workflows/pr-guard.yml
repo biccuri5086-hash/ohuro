@@ -1,0 +1,47 @@
+name: PR Guard
+
+# テスト削除とハーネス変更を検出し、人間の承認ラベルがなければ失敗させる。
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    name: guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: テスト削除の検出
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          ALLOW_TEST_REMOVAL: ${{ contains(github.event.pull_request.labels.*.name, 'approved:test-removal') }}
+        run: node scripts/harness/policy-check.mjs --base "origin/${BASE_REF}"
+      - name: ハーネス変更の承認確認
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          APPROVED: ${{ contains(github.event.pull_request.labels.*.name, 'approved:harness-change') }}
+        run: |
+          changed=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- .github/ .claude/ scripts/harness/ CLAUDE.md AGENTS.md)
+          if [ -n "$changed" ]; then
+            echo "ハーネス・CI・権限に関わる変更:"
+            echo "$changed"
+            if [ "$APPROVED" != "true" ]; then
+              echo "::error::ハーネス変更には人間の承認ラベル approved:harness-change が必要です（DECISIONS.md に記録）"
+              exit 1
+            fi
+          fi

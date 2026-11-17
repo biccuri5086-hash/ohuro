@@ -1,0 +1,16 @@
+{
+  "_comment": "金額は未決定（COST_POLICY.md）。ここでの上限は実行量の上限であり、超過時は自動実行を止めて人間に報告する。",
+  "currency": "JPY",
+  "approvedMonthlyBudget": 0,
+  "actions": {
+    "softLimitMinutesPerMonth": 1500,
+    "hardLimitMinutesPerMonth": 2500,
+    "maxJobTimeoutMinutes": 20
+  },
+  "ai": {
+    "maxAuditRequestsPerPR": 4,
+    "maxAuditRequestsPerMonth": 60,
+    "maxFixAttemptsPerFinding": 2,
+    "paidApiCallsAllowed": false
+  }
+}

@@ -1,0 +1,49 @@
+name: Audit Gate
+
+# 独立監査（Codex）の構造化結果を読み、PR の head SHA に commit status
+# "audit-gate / independent-audit" を設定する。ブランチ保護でこの status を必須にする。
+#
+# セキュリティ: pull_request_target / issue_comment は書き込み可能なトークンで動くため、
+# PR 側のコードは一切チェックアウト・実行しない。判定スクリプトは常にデフォルトブランチのものを使う。
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+  issue_comment:
+    types: [created, edited, deleted]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 再評価する PR 番号
+        required: true
+        type: number
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: read
+  statuses: write
+
+concurrency:
+  group: audit-gate-${{ github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  evaluate:
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: 監査結果の評価
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}
+        run: node scripts/harness/audit-gate.mjs

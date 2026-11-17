@@ -1,0 +1,33 @@
+name: Cost Report
+
+# 月次で GitHub Actions 実行時間と監査依頼回数を集計し、上限超過時は失敗させて所有者に通知する。
+on:
+  schedule:
+    - cron: "17 1 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+  issues: read
+
+concurrency:
+  group: cost-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: 集計
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/harness/cost-report.mjs >> "$GITHUB_STEP_SUMMARY"
