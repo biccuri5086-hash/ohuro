@@ -53,7 +53,7 @@ export function parseAuditMarkers(body) {
 // Codex（GitHub 連携）が要約コメントに埋め込む機械可読な状態（2026-11-17 に実物で確認。D-008）:
 //   <!-- codex-review-state:v1 {"code_review":{"commit_sha":"<40桁>","has_any_findings":false,
 //        "has_unresolved_findings":false,"status":"completed"},"security_review":{...}} -->
-// JSON の波括弧は HTML 文字参照（&#123; &#125;）で書かれている。
+// REST API で取得すると JSON は生の波括弧で返る。Webhook 等の経路では HTML 文字参照（&#123; &#125;）の場合があるため両方に対応する。
 const CODEX_STATE_RE = /<!--\s*codex-review-state:v1\s+([\s\S]*?)\s*-->/;
 const CODEX_REVIEW_KINDS = ["code_review", "security_review"];
 

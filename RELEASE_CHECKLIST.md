@@ -53,8 +53,8 @@
 - [ ] 監査結果に `ohuro-audit` ブロックが含まれることを確認（含まれない場合は D-004 の代替案を選択）
 
 #### Codex が `@codex review` に反応しないとき（所有者が確認）
-受け付けると、通常は依頼コメントに 👀 のリアクションが付く（未検証の想定。初回確認時に本書を更新する）。
-反応がない場合は次を順に確認する。
+正常時は、Codex が PR に要約コメント（「Codex Review Summary」）を投稿し、実行中は 👀、指摘なしで完了すると 👍 を付ける
+（2026-11-17 に PR #6 で確認。D-008）。数分たっても要約コメントが現れない場合は次を順に確認する。
 1. Codex の設定画面で、リポジトリ `biccuri5086-hash/ohuro` の Code review が有効になっている
 2. GitHub App「ChatGPT Codex Connector」のインストール対象にこのリポジトリが含まれている（GitHub → Settings → Applications）
 3. 依頼コメントを投稿した GitHub アカウントが、Codex を使う ChatGPT アカウントと連携している
