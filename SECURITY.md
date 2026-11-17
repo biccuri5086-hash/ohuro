@@ -47,4 +47,5 @@
 | R-3 | Codex 監査の出力形式・ボット名が未検証 | 未検証の間は Audit Gate が pending のまま（安全側） | 初回監査で確認し DECISIONS.md に記録 |
 | R-4 | Actions をタグで参照（SHA 未固定） | 公式 Action のみ使用、Dependabot | SHA 固定 |
 | R-5 | 機械検査（policy/secret/migration）はヒューリスティック | 独立監査で補完 | 実装の進展に合わせて規則追加 |
-| R-6 | ブランチ保護が未設定（本セッションには設定 API がない） | — | 所有者が GitHub 設定画面で設定（RELEASE_CHECKLIST.md「ハーネス初期設定」） |
+| R-6 | ブランチ保護の詳細設定を Claude Code から読み取れない | 所有者が設定（D-005 に記録） | 設定変更時は所有者が DECISIONS.md に記録 |
+| R-7 | 開発依存の脆弱性はマージを止めない（D-006）。2026-11-17 時点で picomatch の ReDoS（GHSA-fc5q-39xc-vjpf、修正版未公開）が開発ツール経由で存在 | 本番依存は引き続きマージ条件。CI のジョブサマリーに全体結果を表示、Dependabot alerts | 修正版の公開後に Dependabot で更新。開発依存の高リスク脆弱性は人間が個別に判断 |

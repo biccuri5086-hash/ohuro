@@ -88,3 +88,17 @@ AI（Claude Code / Codex）は「提案」までしか記録できない。状�
 - 変更理由: Gate 0 着手条件（docs/gates/GATE_0.md）の確認記録
 - 影響する文書・コード: なし（記録のみ）
 - 次の確認: 本記録を含む PR で Codex 監査と Audit Gate の通し動作を検証し、Codex のボット名を確定する
+
+## D-006: 依存脆弱性検査のマージ条件を本番依存に限定
+- 日付: 2026-11-17
+- 状態: 提案（所有者が方針を選択済み。PR のマージと承認ラベルで確定）
+- 種別: ハーネス
+- 提案者: Claude Code
+- 承認者: 未承認（所有者がセッション内で「本番依存のみ必須化」を選択。承認の記録は本 PR のラベル `approved:harness-change` とマージで行う）
+- 承認の証跡: 本記録を含む PR
+- 変更内容: CI の `dependency-audit` ジョブで、マージ条件を `npm audit --omit=dev --audit-level=high`（本番依存）に限定。
+  開発依存を含む全体の `npm audit` は継続実行し、結果をジョブサマリーに表示するが失敗扱いにしない
+- 変更理由: picomatch の ReDoS（GHSA-fc5q-39xc-vjpf、対象 `<=4.0.7`）が 2026-11-17 に公開され、npm 上に修正版が存在しない。
+  経路は vitest / vite / eslint-config-next の開発依存のみで本番バンドルに含まれないが、全 PR がマージ不可になったため
+- 影響する文書・コード: `.github/workflows/ci.yml`, TEST_PLAN.md, SECURITY.md（R-7）
+- 見直し条件: 修正版の公開時、または本番依存に同種の脆弱性が入った時
