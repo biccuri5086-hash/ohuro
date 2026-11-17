@@ -72,3 +72,19 @@ AI（Claude Code / Codex）は「提案」までしか記録できない。状�
 - 未検証事項: Codex の GitHub 連携の有効化状態、ボット名、書式どおりの出力
 - 代替案: Codex 連携が使えない場合、(a) 人間が Codex の結果を確認して `audit:human-override` を付け本書に記録する、
   (b) `openai/codex-action` 等で API キーを使い Actions から監査する（従量課金のため費用承認が必要）
+
+## D-005: ハーネス初期設定の実施記録
+- 日付: 2026-11-17
+- 状態: 提案（記録のみ。D-002〜D-004 の承認状態は変更しない）
+- 種別: ハーネス
+- 提案者: Claude Code
+- 承認者: 未承認
+- 承認の証跡: 所有者が RELEASE_CHECKLIST.md「A. ハーネス初期設定」を Cowork で実施したと報告（2026-11-17）
+- 変更内容: 所有者の報告と、Claude Code が GitHub API で確認できた範囲を記録する
+  - 確認済み: 既定ブランチ `main`、`main` が保護対象（protected）、一時ブランチ `claude/bootstrap-main` の削除、
+    ラベル `approved:harness-change` / `audit:medium-accepted` の存在
+  - 所有者の報告のみ（Claude Code からは設定画面を読めず未確認）: ルールセットの詳細（必須チェック・強制Push禁止等）、
+    Actions 権限、Secret scanning / Push protection、Codex 連携（GitHub App「ChatGPT Codex Connector」）
+- 変更理由: Gate 0 着手条件（docs/gates/GATE_0.md）の確認記録
+- 影響する文書・コード: なし（記録のみ）
+- 次の確認: 本記録を含む PR で Codex 監査と Audit Gate の通し動作を検証し、Codex のボット名を確定する
