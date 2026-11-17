@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+build/
+next-env.d.ts
+*.tsbuildinfo
+
+# testing
+coverage/
+
+# env / secrets — 絶対にコミットしない
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+supabase/.temp/
+supabase/.branches/
+
+# local
+.DS_Store
+npm-debug.log*
+.vercel
+.claude/settings.local.json
+
+# 入浴前後の撮影画像・推論用一時ファイルをリポジトリに置かない
+tmp-captures/
