@@ -19,6 +19,16 @@ function marker({ head = HEAD, critical = 0, high = 0, medium = 0, low = 0, verd
   ].join("\n");
 }
 const entry = (body, at = "2026-11-17T00:00:00Z", author = AUDITOR) => ({ author, body, at });
+
+// 2026-11-17 に PR #6 で実際に投稿された Codex 要約コメントと同じ構造（波括弧は HTML 文字参照）
+function codexState(code = {}, security = { commit_sha: null, has_any_findings: null, has_unresolved_findings: null, status: null }) {
+  const state = {
+    code_review: { commit_sha: HEAD, has_any_findings: false, has_unresolved_findings: false, status: "completed", ...code },
+    security_review: security,
+  };
+  const json = JSON.stringify(state).replace(/\{/g, "&#123;").replace(/\}/g, "&#125;");
+  return `<!-- codex-pull-request-review-summary -->\n<!-- codex-review-state:v1 ${json} -->\n\n<details>Codex Review Summary</details>`;
+}
 const run = (entries, labels = [], headSha = HEAD) => evaluateAuditGate({ headSha, labels, entries, config });
 
 describe("parseAuditMarkers", () => {
@@ -89,6 +99,46 @@ describe("evaluateAuditGate", () => {
     expect(r.state).toBe("failure");
     expect(r.description).toContain("上限");
     expect(run(e, ["human:continue-fix-loop"]).description).not.toContain("上限");
+  });
+  it("Codex 標準形式: 指摘なしで完了なら success", () => {
+    expect(run([entry(codexState())]).state).toBe("success");
+  });
+  it("Codex 標準形式: REST API が返す生の波括弧の形式も読める", () => {
+    const raw = codexState().replace(/&#123;/g, "{").replace(/&#125;/g, "}");
+    expect(raw).toContain('codex-review-state:v1 {"code_review"');
+    expect(run([entry(raw)]).state).toBe("success");
+  });
+  it("Codex 標準形式: 実行中は pending", () => {
+    expect(run([entry(codexState({ status: "running", has_any_findings: null, has_unresolved_findings: null }))]).state).toBe("pending");
+  });
+  it("Codex 標準形式: 未解決の指摘があれば failure", () => {
+    expect(run([entry(codexState({ has_any_findings: true, has_unresolved_findings: true }))]).state).toBe("failure");
+  });
+  it("Codex 標準形式: 同一コミットで解決済みにされた指摘は人間の確認ラベルが必要", () => {
+    const e = [entry(codexState({ has_any_findings: true, has_unresolved_findings: false }))];
+    expect(run(e).state).toBe("failure");
+    expect(run(e, ["audit:medium-accepted"]).state).toBe("success");
+  });
+  it("Codex 標準形式: 別コミットの結果は無効（pending）", () => {
+    expect(run([entry(codexState({ commit_sha: OTHER }))]).state).toBe("pending");
+  });
+  it("Codex 標準形式: 監査者以外が書いた状態コメントは無視する", () => {
+    expect(run([entry(codexState(), undefined, "biccuri5086-hash")]).state).toBe("pending");
+  });
+  it("Codex 標準形式: セキュリティレビューに未解決の指摘があれば failure", () => {
+    const body = codexState({}, { commit_sha: HEAD, status: "completed", has_any_findings: true, has_unresolved_findings: true });
+    expect(run([entry(body)]).state).toBe("failure");
+  });
+  it("Codex 標準形式: 解析できない状態は failure", () => {
+    expect(run([entry("<!-- codex-review-state:v1 &#123;broken -->")]).state).toBe("failure");
+  });
+  it("Codex 標準形式と ohuro-audit ブロックは新しい方を採用する", () => {
+    const e = [
+      entry(marker({ high: 1, verdict: "changes_requested" }), "2026-11-17T01:00:00Z"),
+      entry(codexState(), "2026-11-17T02:00:00Z"),
+    ];
+    expect(run(e).state).toBe("success");
+    expect(run([e[1], { ...e[0], at: "2026-11-17T03:00:00Z" }]).state).toBe("failure");
   });
   it("人間の上書きラベルで success（DECISIONS.md 記録を要求）", () => {
     const r = run([], ["audit:human-override"]);

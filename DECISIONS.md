@@ -72,3 +72,76 @@ AI（Claude Code / Codex）は「提案」までしか記録できない。状�
 - 未検証事項: Codex の GitHub 連携の有効化状態、ボット名、書式どおりの出力
 - 代替案: Codex 連携が使えない場合、(a) 人間が Codex の結果を確認して `audit:human-override` を付け本書に記録する、
   (b) `openai/codex-action` 等で API キーを使い Actions から監査する（従量課金のため費用承認が必要）
+
+## D-005: ハーネス初期設定の実施記録
+- 日付: 2026-11-17
+- 状態: 提案（記録のみ。D-002〜D-004 の承認状態は変更しない）
+- 種別: ハーネス
+- 提案者: Claude Code
+- 承認者: 未承認
+- 承認の証跡: 所有者が RELEASE_CHECKLIST.md「A. ハーネス初期設定」を Cowork で実施したと報告（2026-11-17）
+- 変更内容: 所有者の報告と、Claude Code が GitHub API で確認できた範囲を記録する
+  - 確認済み: 既定ブランチ `main`、`main` が保護対象（protected）、一時ブランチ `claude/bootstrap-main` の削除、
+    ラベル `approved:harness-change` / `audit:medium-accepted` の存在
+  - 所有者の報告のみ（Claude Code からは設定画面を読めず未確認）: ルールセットの詳細（必須チェック・強制Push禁止等）、
+    Actions 権限、Secret scanning / Push protection、Codex 連携（GitHub App「ChatGPT Codex Connector」）
+- 変更理由: Gate 0 着手条件（docs/gates/GATE_0.md）の確認記録
+- 影響する文書・コード: なし（記録のみ）
+- 次の確認: 本記録を含む PR で Codex 監査と Audit Gate の通し動作を検証し、Codex のボット名を確定する
+
+## D-006: 依存脆弱性検査のマージ条件を本番依存に限定
+- 日付: 2026-11-17
+- 状態: 提案（所有者が方針を選択済み。PR のマージと承認ラベルで確定）
+- 種別: ハーネス
+- 提案者: Claude Code
+- 承認者: 未承認（所有者がセッション内で「本番依存のみ必須化」を選択。承認の記録は本 PR のラベル `approved:harness-change` とマージで行う）
+- 承認の証跡: 本記録を含む PR
+- 変更内容: CI の `dependency-audit` ジョブで、マージ条件を `npm audit --omit=dev --audit-level=high`（本番依存）に限定。
+  開発依存を含む全体の `npm audit` は継続実行し、結果をジョブサマリーに表示するが失敗扱いにしない
+- 変更理由: picomatch の ReDoS（GHSA-fc5q-39xc-vjpf、対象 `<=4.0.7`）が 2026-11-17 に公開され、npm 上に修正版が存在しない。
+  経路は vitest / vite / eslint-config-next の開発依存のみで本番バンドルに含まれないが、全 PR がマージ不可になったため
+- 影響する文書・コード: `.github/workflows/ci.yml`, TEST_PLAN.md, SECURITY.md（R-7）
+- 見直し条件: 修正版の公開時、または本番依存に同種の脆弱性が入った時
+
+## D-007: Dependabot の更新対象とマージ先の固定
+- 日付: 2026-11-17
+- 状態: 提案
+- 種別: ハーネス
+- 提案者: Claude Code
+- 承認者: 未承認（本記録を含む PR のラベル `approved:harness-change` とマージで確定）
+- 承認の証跡: 本記録を含む PR
+- 変更内容: `.github/dependabot.yml` に `target-branch: main` を追加。`typescript` と `@types/node` のメジャー更新を対象外にする
+- 変更理由: (1) `main` 作成前に作られた Dependabot PR #1〜#4 の base が作業ブランチになり、ブランチ保護と必須チェックを通らずに作業ブランチへマージされた（#1, #2）。
+  (2) TypeScript 7 は typescript-eslint の対応範囲外（D-003）、`@types/node` 26 は実行環境 Node 22 と不一致
+- 影響する文書・コード: `.github/dependabot.yml`, RELEASE_CHECKLIST.md（A-6）
+- 見直し条件: typescript-eslint が TypeScript 7 に対応した時、または Node の実行バージョンを上げる時
+
+## D-008: Codex 監査の実地確認と Audit Gate の標準形式対応
+- 日付: 2026-11-17
+- 状態: 提案
+- 種別: ハーネス
+- 提案者: Claude Code
+- 承認者: 未承認（本記録を含む PR のラベル `approved:harness-change` とマージで確定）
+- 承認の証跡: PR #6 のコメント（Codex の要約コメントと「Didn't find any major issues」）
+- 確認できた事実（D-004 の未検証事項）:
+  - Codex は GitHub App「ChatGPT Codex Connector」経由で動作し、投稿者は `chatgpt-codex-connector[bot]`（`.github/audit-gate.json` の設定と一致）
+  - `@codex review` で起動。Draft 中・連携設定前の依頼（2回）には反応せず、所有者が Cowork で連携を確認した後の依頼で動作した
+  - 結果は AGENTS.md の報告書式（`ohuro-audit` ブロック・未検証項目）ではなく、Codex 標準形式で返る。
+    要約コメントに `codex-review-state:v1` の状態（commit_sha・status・has_any_findings・has_unresolved_findings）が含まれる
+  - head `2731e76` の監査結果: 指摘なし
+- 変更内容: Audit Gate が `codex-review-state:v1` も読むようにした（判定は AGENTS.md）。Claude の権限で GitHub のレビュースレッド解決操作を deny
+- 変更理由: 標準形式のままでは Audit Gate が pending から進まず、Codex の監査結果をマージ条件にできないため
+- 既知の制約: 判定コードはデフォルトブランチのものが使われるため、本変更を含む PR 自身には適用されない（この PR は人間の確認が必要）。
+  標準形式では修正ループの回数を Audit Gate で数えられない（CLAUDE.md の規則で運用）
+- 影響する文書・コード: scripts/harness/audit-gate.mjs, tests/harness/audit-gate.test.mjs, .claude/settings.json, AGENTS.md, ARCHITECTURE.md, SECURITY.md
+
+## D-009: 待ち時間の作業ルール
+- 日付: 2026-11-17
+- 状態: 提案（所有者の指示による。本記録を含む PR のラベル `approved:harness-change` とマージで確定）
+- 種別: ハーネス
+- 提案者: 人間（所有者）
+- 承認者: 未承認（所有者がセッション内で「待っている間はできるものをやるように設定」と指示）
+- 承認の証跡: 本記録を含む PR
+- 変更内容: CLAUDE.md に「4.5 待ち時間の扱い」を追加。CI・監査・人間の操作を待つ間は、承認不要の作業（自己レビュー、検証、調査、文書更新、下準備等）を自分で進める。監査依頼後の Push など、してはいけないことも明記
+- 変更理由: 待ち時間が多く、その間の作業停止を避けるため
+- 影響する文書・コード: CLAUDE.md

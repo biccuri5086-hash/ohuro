@@ -10,7 +10,8 @@
 | ポリシー検査 | `scripts/harness/policy-check.mjs` | CI | 稼働 |
 | 秘密情報検査 | `scripts/harness/secret-scan.mjs` | CI | 稼働 |
 | マイグレーション静的検査 | `scripts/harness/migration-check.mjs` | CI | 稼働（マイグレーション未作成） |
-| 依存脆弱性 | `npm audit --audit-level=high` | CI | 稼働 |
+| 依存脆弱性（本番依存） | `npm audit --omit=dev --audit-level=high`（マージ条件） | CI | 稼働 |
+| 依存脆弱性（開発依存を含む全体） | `npm audit --audit-level=high`（報告のみ。D-006） | CI | 稼働 |
 | ビルド | `next build` | CI | 稼働 |
 | RLS テスト | Supabase ローカル環境 + SQL/pgTAP 等 | CI | **未構築**（Gate 2。方式は実装時に公式情報で決定） |
 | E2E | Playwright 等 | CI | **未構築**（Gate 2） |

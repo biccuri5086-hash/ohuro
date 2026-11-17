@@ -20,10 +20,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: npm
@@ -50,11 +50,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
-      - name: npm audit (high 以上で失敗)
-        run: npm audit --audit-level=high
+      # D-006: 本番依存（dependencies）の high 以上はマージを止める。
+      - name: npm audit 本番依存（high 以上で失敗）
+        run: npm audit --omit=dev --audit-level=high
+      # D-006: 開発依存を含む全体は結果を表示するが、マージは止めない。
+      # 修正版が未公開の脆弱性で全 PR が止まることを避けるため。結果は人間が確認し、対応を判断する。
+      - name: npm audit 全依存（報告のみ）
+        continue-on-error: true
+        run: |
+          {
+            echo "## npm audit（開発依存を含む・報告のみ）"
+            echo '```'
+            npm audit --audit-level=high || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          npm audit --audit-level=high

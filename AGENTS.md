@@ -82,6 +82,19 @@ verdict: <pass または changes_requested>
 - 機械判定用のコメントブロック（`<!-- ohuro-audit ... -->`）は必ず1つだけ含める。
   Audit Gate（`.github/workflows/audit-gate.yml`）がこれを読み、マージ可否のステータスを設定する。
 
+## Codex（GitHub 連携）の標準形式について
+
+2026-11-17 の実地確認（D-008）では、Codex の GitHub 連携は上記の報告書式に従わず、標準形式で結果を返した
+（指摘なしの場合は「Didn't find any major issues」と 👍、要約コメントに `codex-review-state:v1` の機械可読な状態）。
+Audit Gate は次のどちらでも判定できる。
+
+| 形式 | 判定 |
+|---|---|
+| `ohuro-audit` ブロック（上記の書式） | 重大度別の件数で判定（Critical/High → 不可、Medium → 人間の判断が必要） |
+| Codex 標準の `codex-review-state:v1` | 未解決の指摘あり → 不可（重大度は判別できないため全件ブロック）。指摘なし → 通過。同一コミットのまま解決済みにされた指摘 → 人間の確認（`audit:medium-accepted`）が必要 |
+
+標準形式では「未検証項目」が報告されない。重要な PR では、人間が Codex の画面で監査内容を確認する。
+
 ## 監査の起動方法
 
 - 実装者が PR に `@codex review` とコメントすると監査を依頼したことになる。

@@ -34,7 +34,9 @@
       "mcp__Vercel__edit_project_env",
       "mcp__Vercel__update_firewall_config",
       "mcp__Vercel__put_firewall_config",
-      "mcp__Vercel__update_project_protection_bypass"
+      "mcp__Vercel__update_project_protection_bypass",
+      "mcp__github__resolve_review_thread",
+      "mcp__github__unresolve_review_thread"
     ],
     "ask": [
       "mcp__Supabase__execute_sql",
