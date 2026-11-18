@@ -13,7 +13,7 @@
 | 依存脆弱性（本番依存） | `npm audit --omit=dev --audit-level=high`（マージ条件） | CI | 稼働 |
 | 依存脆弱性（開発依存を含む全体） | `npm audit --audit-level=high`（報告のみ。D-006） | CI | 稼働 |
 | ビルド | `next build` | CI | 稼働 |
-| RLS テスト | Supabase ローカル環境 + SQL/pgTAP 等 | CI | **未構築**（Gate 2。方式は実装時に公式情報で決定） |
+| DB 結合テスト（権限・RLS・制約） | `tests/db/` + 実 PostgreSQL（`npm run test:db`。CI は postgres:17 サービス） | CI（`db-test`）/ ローカル | 稼働（Gate 0 の `waitlist` スキーマ） |
 | E2E | Playwright 等 | CI | **未構築**（Gate 2） |
 | 実機テスト | iPhone / Android 実機 | 人間 | **未実施**（Gate 1） |
 
