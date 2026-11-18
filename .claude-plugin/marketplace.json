@@ -1,0 +1,11 @@
+{
+  "name": "ohuro-mods",
+  "owner": { "name": "ohuro" },
+  "plugins": [
+    {
+      "name": "effort-switch",
+      "source": "./mods/effort-switch",
+      "description": "作業に合わせて、モデル（opus・sonnet・haiku）とエフォートを切り替える。/mode 台本|調査|軽作業|通常|auto。fable は使わない。gekiyaku-todo から複製。"
+    }
+  ]
+}

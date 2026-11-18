@@ -110,6 +110,23 @@ test.describe("事前登録の流れ（G0-2 / G0-3 / G0-5）", () => {
     expect(outboxCount(email)).toBe(1);
   });
 
+  test("宣伝メールの同意は確認ページで受信者が選んだ値だけを記録する", async ({ page }, info) => {
+    const email = uniqueEmail("marketing", info.project.name);
+    await page.goto("/");
+    await page.locator("#signup").scrollIntoViewIfNeeded();
+    await page.check("input[name=marketing]");
+    await submitSignup(page, email);
+    const mail = await waitForEmail(email);
+    await page.goto(mail.confirmUrl);
+    const box = page.locator("input[name=marketing_opt_in]");
+    await expect(box).toBeChecked(); // 初期表示は登録フォームでの選択
+    await box.uncheck();
+    await page.getByRole("button", { name: "登録を確認する" }).click();
+    await expect(page.locator("h1")).toHaveText("事前登録が完了しました");
+    const [s] = await db()`select marketing_opt_in, marketing_opt_in_at from waitlist.signups where email_normalized = ${email}`;
+    expect([s!.marketing_opt_in, s!.marketing_opt_in_at]).toEqual([false, null]);
+  });
+
   test("配信停止と登録データの削除ができる", async ({ page }, info) => {
     const email = uniqueEmail("unsub", info.project.name);
     await page.goto("/");

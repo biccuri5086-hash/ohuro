@@ -8,7 +8,7 @@ import { createWaitlistService, type WaitlistService } from "./service";
  * - WAITLIST_DATABASE_URL: PostgreSQL 接続文字列（Supabase の接続文字列。service_role 相当の権限）
  * - APP_BASE_URL: 公開 URL（確認リンクの組み立て、Origin 検査に使う）
  * - RATE_LIMIT_SECRET: 32 文字以上のランダム値
- * - EMAIL_PROVIDER: "console"（開発）| "resend"
+ * - EMAIL_PROVIDER: "console"（ローカル開発のみ。トークンはログに出さない）| "resend"
  * - RESEND_API_KEY, EMAIL_FROM: EMAIL_PROVIDER=resend のとき必須
  * - OPERATOR_NAME, OPERATOR_CONTACT: メールの送信者表示（未設定ならプレースホルダー）
  */
@@ -40,9 +40,9 @@ export function readWaitlistEnv(env: Record<string, string | undefined> = proces
   if (emailProvider === "outbox" && (env.VERCEL_ENV || !env.EMAIL_OUTBOX_FILE)) {
     throw new WaitlistConfigError("EMAIL_PROVIDER=outbox はローカルの E2E テスト専用です（EMAIL_OUTBOX_FILE が必要）");
   }
-  // 本番公開環境ではログ出力の仮送信を使わない
-  if (emailProvider === "console" && env.VERCEL_ENV === "production") {
-    throw new WaitlistConfigError("本番環境では EMAIL_PROVIDER=console を使えません");
+  // ログ出力の仮送信はローカル開発専用。Vercel 上（本番・プレビューとも）では使わない
+  if (emailProvider === "console" && env.VERCEL_ENV) {
+    throw new WaitlistConfigError("Vercel 上では EMAIL_PROVIDER=console を使えません（ローカル開発専用）");
   }
   if (emailProvider === "resend" && (!env.RESEND_API_KEY || !env.EMAIL_FROM)) {
     throw new WaitlistConfigError("EMAIL_PROVIDER=resend には RESEND_API_KEY と EMAIL_FROM が必要です");

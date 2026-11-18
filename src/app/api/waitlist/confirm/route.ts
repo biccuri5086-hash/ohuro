@@ -15,7 +15,9 @@ export async function POST(request: Request) {
     base = waitlist.env.baseUrl;
     if (isSameOrigin(request.headers.get("origin"), base)) {
       const form = await request.formData();
-      const result = await waitlist.service.confirm(form.get("token"));
+      // 宣伝メールの同意は、確認ページでメールの受信者が選んだ値だけを使う
+      const marketingOptIn = form.get("marketing_opt_in") === "on";
+      const result = await waitlist.service.confirm(form.get("token"), { marketingOptIn });
       status = result.status;
       surveyToken = result.surveyToken;
     }
