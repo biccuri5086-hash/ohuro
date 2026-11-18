@@ -16,7 +16,8 @@
     "check:secrets": "node scripts/harness/secret-scan.mjs",
     "check:policy": "node scripts/harness/policy-check.mjs",
     "check:migrations": "node scripts/harness/migration-check.mjs",
-    "verify": "npm run typecheck && npm run lint && npm run test && npm run check:secrets && npm run check:policy && npm run check:migrations && npm run build"
+    "verify": "npm run typecheck && npm run lint && npm run test && npm run check:secrets && npm run check:policy && npm run check:migrations && npm run build",
+    "ads:render": "node scripts/ads/render-ads.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
