@@ -6,7 +6,7 @@ import { createTestDatabase, type Sql } from "./helpers";
 let sql: Sql;
 let drop: () => Promise<void>;
 let clock: Date;
-let sent: { to: string; confirmUrl: string }[];
+let sent: { to: string; confirmUrl: string; unsubscribeUrl: string; oneClickUrl: string }[];
 let failSend = false;
 const errors: string[] = [];
 
@@ -68,9 +68,13 @@ describe("登録（G0-2）", () => {
     expect(s!.is_test).toBe(false);
     expect(sent).toHaveLength(1);
     expect(sent[0]!.confirmUrl).toMatch(/^https:\/\/ohuro\.example\/confirm\?token=[A-Za-z0-9_-]{43}$/);
-    const tokens = await sql`select token_hash from waitlist.tokens`;
-    expect(tokens).toHaveLength(1);
-    expect(tokens[0]!.token_hash).not.toContain(tokenOf(sent[0]!.confirmUrl)); // 平文は保存しない
+    const tokens = await sql`select token_hash, purpose from waitlist.tokens order by purpose`;
+    // 確認用と配信停止用（G0-3）が1件ずつ
+    expect(tokens.map((t) => t.purpose)).toEqual(["confirm", "unsubscribe"]);
+    for (const t of tokens) {
+      expect(t.token_hash).not.toContain(tokenOf(sent[0]!.confirmUrl)); // 平文は保存しない
+      expect(t.token_hash).not.toContain(tokenOf(sent[0]!.unsubscribeUrl));
+    }
     const ev = await sql`select name, utm_content from waitlist.events`;
     expect(ev.map((e) => [e.name, e.utm_content])).toEqual([["signup_created", "ad_a_v1"]]);
   });
@@ -222,5 +226,79 @@ describe("確認（G0-2）", () => {
     expect(s!.confirmed_at).toBeNull();
     expect(s!.unsubscribed_at).toBeNull();
     expect(sent).toHaveLength(2);
+  });
+});
+
+describe("配信停止・削除（G0-3）", () => {
+  it("確認メールに配信停止リンクとワンクリック用リンクが付く", async () => {
+    await service().register(input());
+    expect(sent[0]!.unsubscribeUrl).toMatch(/^https:\/\/ohuro\.example\/unsubscribe\?token=[A-Za-z0-9_-]{43}$/);
+    expect(tokenOf(sent[0]!.oneClickUrl)).toBe(tokenOf(sent[0]!.unsubscribeUrl));
+    expect(tokenOf(sent[0]!.unsubscribeUrl)).not.toBe(tokenOf(sent[0]!.confirmUrl));
+  });
+
+  it("配信停止で解除済みになり、宣伝メールの同意も取り消され、未使用の確認リンクは使えなくなる", async () => {
+    const svc = service();
+    await svc.register(input({ marketingOptIn: true }));
+    const u = tokenOf(sent[0]!.unsubscribeUrl);
+    expect((await svc.unsubscribe(u, "unsubscribe")).status).toBe("unsubscribed");
+    const [s] = await sql`select unsubscribed_at, marketing_opt_in from waitlist.signups`;
+    expect(s!.unsubscribed_at).not.toBeNull();
+    expect(s!.marketing_opt_in).toBe(false);
+    expect((await svc.confirm(tokenOf(sent[0]!.confirmUrl))).status).toBe("invalid");
+    // 2 回目も同じ結果（解除日時は最初のまま）
+    advance(1000);
+    expect((await svc.unsubscribe(u, "unsubscribe")).status).toBe("unsubscribed");
+    const [s2] = await sql`select unsubscribed_at from waitlist.signups`;
+    expect(s2!.unsubscribed_at.getTime()).toBe(s!.unsubscribed_at.getTime());
+  });
+
+  it("確認済みの登録も配信停止でき、集計では解除済みになる", async () => {
+    const svc = service();
+    await svc.register(input({ utm: { utm_content: "ad_a_v1" } }));
+    await svc.confirm(tokenOf(sent[0]!.confirmUrl));
+    await svc.unsubscribe(tokenOf(sent[0]!.unsubscribeUrl), "unsubscribe");
+    const [r] = await sql`select signups_confirmed, signups_confirmed_active from waitlist.signup_summary_by_creative`;
+    expect([Number(r!.signups_confirmed), Number(r!.signups_confirmed_active)]).toEqual([1, 0]);
+  });
+
+  it("削除するとメールアドレスを含む登録データとトークンが消え、同じリンクは以後使えない", async () => {
+    const svc = service();
+    await svc.register(input());
+    const u = tokenOf(sent[0]!.unsubscribeUrl);
+    expect((await svc.unsubscribe(u, "delete")).status).toBe("deleted");
+    expect(await countSignups()).toBe(0);
+    expect((await sql`select count(*)::int as n from waitlist.tokens`)[0]!.n).toBe(0);
+    const emailLeft = await sql`select count(*)::int as n from waitlist.events where row_to_json(events)::text ilike '%ohuro-mail.jp%'`;
+    expect(emailLeft[0]!.n).toBe(0);
+    expect((await svc.unsubscribe(u, "delete")).status).toBe("invalid");
+  });
+
+  it("他人の登録は操作できない（改ざん・形式不正・確認用トークンの流用）", async () => {
+    const svc = service();
+    await svc.register(input());
+    const u = tokenOf(sent[0]!.unsubscribeUrl);
+    const tampered = (u[0] === "A" ? "B" : "A") + u.slice(1);
+    expect((await svc.unsubscribe(tampered, "delete")).status).toBe("invalid");
+    expect((await svc.unsubscribe("short", "delete")).status).toBe("invalid");
+    expect((await svc.unsubscribe(tokenOf(sent[0]!.confirmUrl), "delete")).status).toBe("invalid");
+    expect((await svc.unsubscribe(u, "drop" as never)).status).toBe("invalid");
+    expect(await countSignups()).toBe(1);
+  });
+
+  it("期限切れの配信停止リンクは使えない", async () => {
+    const svc = service();
+    await svc.register(input());
+    advance(366 * 24 * 60 * 60 * 1000);
+    expect((await svc.unsubscribe(tokenOf(sent[0]!.unsubscribeUrl), "unsubscribe")).status).toBe("expired");
+  });
+
+  it("再送のたびに新しい配信停止リンクが発行され、古いものも期限内は有効", async () => {
+    const svc = service();
+    await svc.register(input());
+    advance(61_000);
+    await svc.register(input());
+    expect(sent).toHaveLength(2);
+    expect((await svc.unsubscribe(tokenOf(sent[0]!.unsubscribeUrl), "unsubscribe")).status).toBe("unsubscribed");
   });
 });

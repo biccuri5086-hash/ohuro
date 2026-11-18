@@ -4,6 +4,8 @@ import "server-only";
 export const WAITLIST_LIMITS = {
   /** 確認リンクの有効期限 */
   confirmTokenTtlMs: 24 * 60 * 60 * 1000,
+  /** 配信停止・削除リンクの有効期限（メールごとに発行） */
+  unsubscribeTokenTtlMs: 365 * 24 * 60 * 60 * 1000,
   /** 同じアドレスへの確認メール再送の最短間隔 */
   resendMinIntervalMs: 60 * 1000,
   /** 同じアドレスへの確認メールの 24 時間あたり上限 */

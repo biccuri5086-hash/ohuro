@@ -1,6 +1,6 @@
 import "server-only";
 
-export type ConfirmationEmailInput = { to: string; confirmUrl: string };
+export type ConfirmationEmailInput = { to: string; confirmUrl: string; unsubscribeUrl: string; oneClickUrl: string };
 
 export interface EmailSender {
   sendConfirmation(input: ConfirmationEmailInput): Promise<void>;
@@ -14,7 +14,7 @@ export type SenderIdentity = {
 };
 
 /** 確認メールの本文（日本語）。登録の確認であり、広告宣伝ではない */
-export function buildConfirmationEmail(confirmUrl: string, sender: SenderIdentity) {
+export function buildConfirmationEmail(confirmUrl: string, unsubscribeUrl: string, sender: SenderIdentity) {
   const subject = "【おふろクエスト】事前登録の確認をお願いします";
   const text = [
     "おふろクエストの事前登録（リリース情報の受け取り）を受け付けました。",
@@ -25,6 +25,9 @@ export function buildConfirmationEmail(confirmUrl: string, sender: SenderIdentit
     "このメールに心当たりがない場合は、何もしないでください。確認されない登録は完了しません。",
     "",
     "おふろクエストは開発中のサービスです。公開日は未定です。",
+    "",
+    "配信停止・登録データの削除はこちら:",
+    unsubscribeUrl,
     "",
     `送信者: ${sender.operatorName}`,
     `お問い合わせ: ${sender.contact}`,
@@ -37,6 +40,7 @@ export function buildConfirmationEmail(confirmUrl: string, sender: SenderIdentit
 <p style="font-size:12px;color:#555">ボタンが開けない場合: ${esc(confirmUrl)}</p>
 <p>このメールに心当たりがない場合は、何もしないでください。確認されない登録は完了しません。</p>
 <p>おふろクエストは開発中のサービスです。公開日は未定です。</p>
+<p style="font-size:12px;color:#555">配信停止・登録データの削除: <a href="${esc(unsubscribeUrl)}">${esc(unsubscribeUrl)}</a></p>
 <hr><p style="font-size:12px;color:#555">送信者: ${esc(sender.operatorName)}<br>お問い合わせ: ${esc(sender.contact)}</p>
 </body></html>`;
   return { subject, text, html };
@@ -45,9 +49,9 @@ export function buildConfirmationEmail(confirmUrl: string, sender: SenderIdentit
 /** 開発用: 送信せずログに出す。メールアドレスは伏せる */
 export function createConsoleSender(sender: SenderIdentity, log: (msg: string) => void = console.info): EmailSender {
   return {
-    async sendConfirmation({ to, confirmUrl }) {
-      const { subject } = buildConfirmationEmail(confirmUrl, sender);
-      log(`[waitlist:dev-email] to=${maskEmail(to)} subject=${subject} confirmUrl=${confirmUrl}`);
+    async sendConfirmation({ to, confirmUrl, unsubscribeUrl }) {
+      const { subject } = buildConfirmationEmail(confirmUrl, unsubscribeUrl, sender);
+      log(`[waitlist:dev-email] to=${maskEmail(to)} subject=${subject} confirmUrl=${confirmUrl} unsubscribeUrl=${unsubscribeUrl}`);
     },
   };
 }
@@ -64,12 +68,20 @@ export function createResendSender(opts: {
 }): EmailSender {
   const fetchImpl = opts.fetchImpl ?? fetch;
   return {
-    async sendConfirmation({ to, confirmUrl }) {
-      const { subject, text, html } = buildConfirmationEmail(confirmUrl, opts.sender);
+    async sendConfirmation({ to, confirmUrl, unsubscribeUrl, oneClickUrl }) {
+      const { subject, text, html } = buildConfirmationEmail(confirmUrl, unsubscribeUrl, opts.sender);
       const res = await fetchImpl("https://api.resend.com/emails", {
         method: "POST",
         headers: { authorization: `Bearer ${opts.apiKey}`, "content-type": "application/json" },
-        body: JSON.stringify({ from: opts.from, to: [to], subject, text, html }),
+        body: JSON.stringify({
+          from: opts.from,
+          to: [to],
+          subject,
+          text,
+          html,
+          // RFC 8058 のワンクリック配信停止（メールソフトの「配信停止」ボタン）
+          headers: { "List-Unsubscribe": `<${oneClickUrl}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" },
+        }),
       });
       if (!res.ok) throw new Error(`email provider responded with status ${res.status}`);
     },

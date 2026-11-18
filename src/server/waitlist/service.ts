@@ -26,6 +26,9 @@ export type RegisterResult =
 
 export type ConfirmResult = { status: "confirmed" | "already_confirmed" | "expired" | "invalid" };
 
+export type UnsubscribeMode = "unsubscribe" | "delete";
+export type UnsubscribeResult = { status: "unsubscribed" | "deleted" | "expired" | "invalid" };
+
 export type WaitlistDeps = {
   sql: postgres.Sql;
   sender: EmailSender;
@@ -90,6 +93,7 @@ export function createWaitlistService(deps: WaitlistDeps) {
     const isTest = isTestEmail(normalized);
 
     const token = generateToken();
+    const unsubscribeToken = generateToken();
     let shouldSend = false;
 
     await deps.sql.begin(async (tx) => {
@@ -144,6 +148,14 @@ export function createWaitlistService(deps: WaitlistDeps) {
           created_at: at,
           expires_at: new Date(at.getTime() + L.confirmTokenTtlMs),
         })}`;
+        // 配信停止・削除リンク（メールごとに発行。確認前でも使える）
+        await tx`insert into waitlist.tokens ${tx({
+          token_hash: hashToken(unsubscribeToken),
+          signup_id: row.id,
+          purpose: "unsubscribe",
+          created_at: at,
+          expires_at: new Date(at.getTime() + L.unsubscribeTokenTtlMs),
+        })}`;
         await tx`
           update waitlist.signups set
             confirmation_sent_count = ${reset ? 1 : row.confirmation_sent_count + 1},
@@ -153,10 +165,18 @@ export function createWaitlistService(deps: WaitlistDeps) {
     });
 
     if (shouldSend) {
-      const confirmUrl = new URL("/confirm", deps.baseUrl);
-      confirmUrl.searchParams.set("token", token);
+      const link = (path: string, t: string) => {
+        const u = new URL(path, deps.baseUrl);
+        u.searchParams.set("token", t);
+        return u.toString();
+      };
       try {
-        await deps.sender.sendConfirmation({ to: email, confirmUrl: confirmUrl.toString() });
+        await deps.sender.sendConfirmation({
+          to: email,
+          confirmUrl: link("/confirm", token),
+          unsubscribeUrl: link("/unsubscribe", unsubscribeToken),
+          oneClickUrl: link("/api/waitlist/one-click", unsubscribeToken),
+        });
       } catch (e) {
         logError(`[waitlist] confirmation email failed: ${e instanceof Error ? e.message : "unknown error"}`);
       }
@@ -204,7 +224,37 @@ export function createWaitlistService(deps: WaitlistDeps) {
     });
   }
 
-  return { register, confirm };
+  /**
+   * 配信停止または登録データの削除。
+   * - unsubscribe: 以後メールを送らない（集計では解除済み）。未使用の確認リンクは無効化
+   * - delete: メールアドレスを含む登録データを削除（トークンも連動して削除）。計測イベントは個人情報を含まないため残る
+   * 配信停止リンクは期限内なら何度でも使える（2回目以降も同じ結果）
+   */
+  async function unsubscribe(token: unknown, mode: UnsubscribeMode): Promise<UnsubscribeResult> {
+    if (!isWellFormedToken(token)) return { status: "invalid" };
+    if (mode !== "unsubscribe" && mode !== "delete") return { status: "invalid" };
+    const at = now();
+    return deps.sql.begin(async (tx) => {
+      const [row] = await tx<{ signup_id: string; expires_at: Date }[]>`
+        select t.signup_id, t.expires_at from waitlist.tokens t
+        where t.token_hash = ${hashToken(token)} and t.purpose = 'unsubscribe'
+        for update`;
+      if (!row) return { status: "invalid" } as const;
+      if (row.expires_at.getTime() <= at.getTime()) return { status: "expired" } as const;
+      if (mode === "delete") {
+        await tx`delete from waitlist.signups where id = ${row.signup_id}`;
+        return { status: "deleted" } as const;
+      }
+      await tx`
+        update waitlist.signups set
+          unsubscribed_at = coalesce(unsubscribed_at, ${at}), marketing_opt_in = false, marketing_opt_in_at = null
+        where id = ${row.signup_id}`;
+      await tx`update waitlist.tokens set used_at = ${at} where signup_id = ${row.signup_id} and purpose = 'confirm' and used_at is null`;
+      return { status: "unsubscribed" } as const;
+    });
+  }
+
+  return { register, confirm, unsubscribe };
 }
 
 function nullUtm(utm: Utm) {
