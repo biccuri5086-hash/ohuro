@@ -1,0 +1,5 @@
+{
+  "name": "effort-switch",
+  "version": "0.1.0",
+  "description": "作業に合わせて、モデルのエフォート（とモデル）を切り替える。/mode 台本|調査|軽作業|通常|auto"
+}
