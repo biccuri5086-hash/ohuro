@@ -46,14 +46,30 @@ export function buildConfirmationEmail(confirmUrl: string, unsubscribeUrl: strin
   return { subject, text, html };
 }
 
-/** 開発用: 送信せずログに出す。メールアドレスは伏せる */
+/**
+ * 開発用: 送信せずログに出す。メールアドレスは伏せ、トークン（ベアラー値）はログに出さない。
+ * ログを読める人が確認リンクを使えないようにするため（AGENTS.md: トークンをログに出さない）。
+ */
 export function createConsoleSender(sender: SenderIdentity, log: (msg: string) => void = console.info): EmailSender {
   return {
     async sendConfirmation({ to, confirmUrl, unsubscribeUrl }) {
       const { subject } = buildConfirmationEmail(confirmUrl, unsubscribeUrl, sender);
-      log(`[waitlist:dev-email] to=${maskEmail(to)} subject=${subject} confirmUrl=${confirmUrl} unsubscribeUrl=${unsubscribeUrl}`);
+      log(
+        `[waitlist:dev-email] to=${maskEmail(to)} subject=${subject} confirmUrl=${redactUrlSecrets(confirmUrl)} unsubscribeUrl=${redactUrlSecrets(unsubscribeUrl)}`,
+      );
     },
   };
+}
+
+/** URL のクエリ値をすべて伏せる（パスまでは残す） */
+export function redactUrlSecrets(url: string): string {
+  try {
+    const u = new URL(url);
+    for (const key of [...u.searchParams.keys()]) u.searchParams.set(key, "[redacted]");
+    return u.toString();
+  } catch {
+    return "[redacted-url]";
+  }
 }
 
 /**
