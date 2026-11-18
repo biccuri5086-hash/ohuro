@@ -13,11 +13,11 @@ const nextConfig: NextConfig = {
     ];
     return [
       { source: "/:path*", headers: common },
-      // トークン付き URL を外部へ送らない
-      { source: "/confirm/:path*", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
-      { source: "/unsubscribe/:path*", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
-      { source: "/confirm", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
-      { source: "/unsubscribe", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] },
+      // トークン付き URL を外部へ送らない。no-referrer だとフォーム送信の Origin が null になり同一オリジン検査に失敗するため same-origin を使う
+      { source: "/confirm/:path*", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
+      { source: "/unsubscribe/:path*", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
+      { source: "/confirm", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
+      { source: "/unsubscribe", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
     ];
   },
 };

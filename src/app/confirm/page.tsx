@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "事前登録の確認 | おふろクエスト",
   robots: { index: false, follow: false },
-  referrer: "no-referrer",
+  referrer: "same-origin",
 };
 
 export default async function ConfirmPage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
