@@ -8,13 +8,16 @@ export const dynamic = "force-dynamic";
 // GET のリンクで即確定しないのは、メールのセキュリティ機能がリンクを自動で開いて誤確認するのを防ぐため。
 export async function POST(request: Request) {
   let status = "invalid";
+  let surveyToken: string | undefined;
   let base: string | undefined;
   try {
     const waitlist = getWaitlist();
     base = waitlist.env.baseUrl;
     if (isSameOrigin(request.headers.get("origin"), base)) {
       const form = await request.formData();
-      status = (await waitlist.service.confirm(form.get("token"))).status;
+      const result = await waitlist.service.confirm(form.get("token"));
+      status = result.status;
+      surveyToken = result.surveyToken;
     }
   } catch {
     console.error("[waitlist] confirm failed");
@@ -22,5 +25,6 @@ export async function POST(request: Request) {
   }
   const target = new URL("/confirm/result", base ?? request.url);
   target.searchParams.set("status", status);
+  if (surveyToken) target.searchParams.set("survey", surveyToken);
   return NextResponse.redirect(target, { status: 303 });
 }

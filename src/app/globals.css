@@ -353,3 +353,19 @@ h3 {
     scroll-behavior: auto !important;
   }
 }
+
+/* アンケート */
+.survey fieldset {
+  display: grid;
+  gap: 8px;
+}
+
+.survey-legend {
+  font-weight: 700;
+  padding: 0 4px;
+}
+
+textarea.field-input {
+  min-height: 120px;
+  resize: vertical;
+}

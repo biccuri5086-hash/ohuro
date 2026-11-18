@@ -1,0 +1,5 @@
+# Meta 広告マネージャーの値を手入力する（配信後）。空欄は「未取得」として扱う。
+# utm_content は広告素材（G0-7）の識別子と一致させる。
+utm_content,spend_jpy,impressions,clicks
+ad_a_v1,,,
+ad_b_v1,,,

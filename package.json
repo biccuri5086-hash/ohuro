@@ -17,7 +17,8 @@
     "check:policy": "node scripts/harness/policy-check.mjs",
     "check:migrations": "node scripts/harness/migration-check.mjs",
     "verify": "npm run typecheck && npm run lint && npm run test && npm run check:secrets && npm run check:policy && npm run check:migrations && npm run build",
-    "test:db": "vitest run --config vitest.db.config.mts"
+    "test:db": "vitest run --config vitest.db.config.mts",
+    "report:gate0": "node scripts/report/gate0-report.mjs docs/gates/gate0_ad_metrics.csv"
   },
   "dependencies": {
     "next": "16.4.6",
