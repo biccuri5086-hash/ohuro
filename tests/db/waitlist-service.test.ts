@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { createWaitlistService, type RegisterInput } from "@/server/waitlist/service";
+import { CONSENT_VERSION } from "@/lib/waitlist/consent";
 import type { EmailSender } from "@/server/waitlist/email";
 import { createTestDatabase, type Sql } from "./helpers";
 
@@ -64,7 +65,7 @@ describe("登録（G0-2）", () => {
     expect(s!.email_normalized).toBe("user@ohuro-mail.jp");
     expect(s!.confirmed_at).toBeNull();
     expect(s!.utm_content).toBe("ad_a_v1");
-    expect(s!.consent_version).toBeTruthy();
+    expect(s!.consent_version).toBe(CONSENT_VERSION); // 登録時の同意文面の版を記録
     expect(s!.is_test).toBe(false);
     expect(sent).toHaveLength(1);
     expect(sent[0]!.confirmUrl).toMatch(/^https:\/\/ohuro\.example\/confirm\?token=[A-Za-z0-9_-]{43}$/);

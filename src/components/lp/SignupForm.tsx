@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { captureUtm } from "@/lib/waitlist/attribution";
+import { CONSENT_TEXT_MARKETING } from "@/lib/waitlist/consent";
 import { isValidEmail, type Utm } from "@/lib/waitlist/validation";
 
 type State =
@@ -127,7 +128,7 @@ export function SignupForm({ onEvent }: { onEvent?: (name: "form_view" | "form_s
       </label>
       <label className="check">
         <input type="checkbox" name="marketing" value="yes" />
-        <span>リリース情報以外のお知らせ（キャンペーン等）も受け取る（任意）</span>
+        <span>{CONSENT_TEXT_MARKETING}</span>
       </label>
       <button type="submit" className="button-primary button-block" disabled={state.kind === "sending"}>
         {state.kind === "sending" ? "送信中…" : "無料で事前登録する"}
