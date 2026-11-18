@@ -211,6 +211,61 @@ describe("確認（G0-2）", () => {
     expect((await svc.confirm(undefined)).status).toBe("invalid");
   });
 
+  it("宣伝メールの同意は確認ページで受信者が選んだ値だけを記録する（Codex 指摘 PR #20）", async () => {
+    const svc = service();
+    // 第三者が他人のアドレスを宣伝メール同意つきで送信
+    await svc.register(input({ marketingOptIn: true }));
+    const t = tokenOf(sent[0]!.confirmUrl);
+    expect(await svc.lookupConfirmation(t)).toEqual({ marketingOptIn: true }); // 初期表示には使う
+    // 受信者が確認ページでチェックを外して確認
+    expect((await svc.confirm(t, { marketingOptIn: false })).status).toBe("confirmed");
+    const [s] = await sql`select marketing_opt_in, marketing_opt_in_at from waitlist.signups`;
+    expect([s!.marketing_opt_in, s!.marketing_opt_in_at]).toEqual([false, null]);
+  });
+
+  it("確認ページで受信者が選べば、確認時刻を同意日時として記録する", async () => {
+    const svc = service();
+    await svc.register(input());
+    advance(5_000);
+    await svc.confirm(tokenOf(sent[0]!.confirmUrl), { marketingOptIn: true });
+    const [s] = await sql`select marketing_opt_in, marketing_opt_in_at, confirmed_at from waitlist.signups`;
+    expect(s!.marketing_opt_in).toBe(true);
+    expect(s!.marketing_opt_in_at).toEqual(s!.confirmed_at);
+  });
+
+  it("選択を渡さない確認は宣伝メールに同意しない扱い", async () => {
+    const svc = service();
+    await svc.register(input({ marketingOptIn: true }));
+    await svc.confirm(tokenOf(sent[0]!.confirmUrl));
+    const [s] = await sql`select marketing_opt_in from waitlist.signups`;
+    expect(s!.marketing_opt_in).toBe(false);
+  });
+
+  it("未確認の再送では、確認ページの初期表示に最新の送信内容を使う", async () => {
+    const svc = service();
+    await svc.register(input({ marketingOptIn: true }));
+    advance(61_000);
+    await svc.register(input({ marketingOptIn: false }));
+    expect(sent).toHaveLength(2);
+    expect(await svc.lookupConfirmation(tokenOf(sent[1]!.confirmUrl))).toEqual({ marketingOptIn: false });
+    expect(await svc.lookupConfirmation(tokenOf(sent[0]!.confirmUrl))).toBeNull(); // 古いリンクは無効
+  });
+
+  it("確認ページの読み取りは状態を変えず、無効・期限切れ・使用済みでは null", async () => {
+    const svc = service();
+    await svc.register(input());
+    const t = tokenOf(sent[0]!.confirmUrl);
+    expect(await svc.lookupConfirmation(t)).toEqual({ marketingOptIn: false });
+    const [s] = await sql`select confirmed_at from waitlist.signups`;
+    expect(s!.confirmed_at).toBeNull();
+    expect(await svc.lookupConfirmation("short")).toBeNull();
+    await svc.confirm(t);
+    expect(await svc.lookupConfirmation(t)).toBeNull();
+    await svc.register(input({ email: "late@ohuro-mail.jp" }));
+    advance(24 * 60 * 60 * 1000 + 1);
+    expect(await svc.lookupConfirmation(tokenOf(sent[1]!.confirmUrl))).toBeNull();
+  });
+
   it("解除済みの人が再登録すると、改めて確認からやり直す", async () => {
     const svc = service();
     await svc.register(input());

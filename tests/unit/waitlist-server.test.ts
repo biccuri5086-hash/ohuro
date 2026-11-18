@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildConfirmationEmail, createConsoleSender, createResendSender, maskEmail } from "@/server/waitlist/email";
+import { buildConfirmationEmail, createConsoleSender, createResendSender, maskEmail, redactUrlSecrets } from "@/server/waitlist/email";
 import { clientKeyFrom, isSameOrigin, readWaitlistEnv, WaitlistConfigError } from "@/server/waitlist";
 import { generateToken, hashToken, isWellFormedToken, keyedHash } from "@/server/waitlist/tokens";
 
@@ -50,6 +50,18 @@ describe("確認メール", () => {
     expect(log.mock.calls[0]![0]).not.toContain("secret.user");
     expect(maskEmail("secret.user@example.com")).toBe("s***@example.com");
   });
+  it("開発用の送信は確認トークンをログに出さない（Codex 指摘 PR #20）", async () => {
+    const log = vi.fn();
+    const token = "T".repeat(43);
+    await createConsoleSender(sender, log).sendConfirmation({
+      to: "a@example.com",
+      confirmUrl: `https://ohuro.example/confirm?token=${token}`,
+    });
+    const line = String(log.mock.calls[0]![0]);
+    expect(line).not.toContain(token);
+    expect(line).toContain("/confirm?token=%5Bredacted%5D");
+    expect(redactUrlSecrets("not a url ?token=abc")).toBe("[redacted-url]");
+  });
   it("Resend 送信の失敗時、エラーにメールアドレスと API キーを含めない", async () => {
     const fetchImpl = vi.fn(async () => new Response("nope", { status: 422 }));
     const s = createResendSender({ apiKey: FAKE_KEY, from: "o@ohuro.example", sender, fetchImpl });
@@ -74,8 +86,8 @@ describe("環境変数", () => {
   ])("%s が不正なら起動しない", (key, value) => {
     expect(() => readWaitlistEnv({ ...goodEnv, [key]: value })).toThrow(WaitlistConfigError);
   });
-  it("本番環境ではログ出力の仮送信を使えない", () => {
-    expect(() => readWaitlistEnv({ ...goodEnv, VERCEL_ENV: "production" })).toThrow(/本番環境/);
+  it.each(["production", "preview", "development"])("Vercel 上（%s）ではログ出力の仮送信を使えない", (vercelEnv) => {
+    expect(() => readWaitlistEnv({ ...goodEnv, VERCEL_ENV: vercelEnv })).toThrow(/ローカル開発専用/);
   });
   it("resend には API キーと送信元が必要", () => {
     expect(() => readWaitlistEnv({ ...goodEnv, EMAIL_PROVIDER: "resend" })).toThrow(/RESEND_API_KEY/);

@@ -131,6 +131,14 @@ export function createWaitlistService(deps: WaitlistDeps) {
         shouldSend = false; // 確認済み: 何もしない（応答は同じ）
       } else {
         shouldSend = canSendConfirmation(row, at).ok;
+        if (shouldSend) {
+          // 未確認のまま再送する場合、確認ページの初期表示には最新の送信内容を使う。
+          // 宣伝メールの同意は確認ページでメールの受信者が確定する（confirm）。
+          await tx`
+            update waitlist.signups set
+              marketing_opt_in = ${marketing}, marketing_opt_in_at = ${marketing ? at : null}
+            where id = ${row.id}`;
+        }
       }
 
       if (shouldSend) {
@@ -164,9 +172,29 @@ export function createWaitlistService(deps: WaitlistDeps) {
     return { status: "accepted" };
   }
 
-  async function confirm(token: unknown): Promise<ConfirmResult> {
+  /**
+   * 確認ページの表示用。有効な確認トークンなら、登録時に選ばれた宣伝メールの希望を返す（状態は変えない）。
+   * 無効・期限切れ・使用済みなら null。
+   */
+  async function lookupConfirmation(token: unknown): Promise<{ marketingOptIn: boolean } | null> {
+    if (!isWellFormedToken(token)) return null;
+    const [row] = await deps.sql<{ marketing_opt_in: boolean }[]>`
+      select s.marketing_opt_in
+      from waitlist.tokens t join waitlist.signups s on s.id = t.signup_id
+      where t.token_hash = ${hashToken(token)} and t.purpose = 'confirm'
+        and t.used_at is null and t.expires_at > ${now()}`;
+    return row ? { marketingOptIn: row.marketing_opt_in } : null;
+  }
+
+  /**
+   * 確認を確定する。宣伝メールの同意は、確認ページでメールの受信者が選んだ値（choice）だけを記録する。
+   * 登録フォームの値は第三者が他人のアドレスで送れるため、同意の根拠にしない（Codex 指摘 PR #20）。
+   * choice を省略した場合は「同意なし」として扱う。
+   */
+  async function confirm(token: unknown, choice: { marketingOptIn: boolean } = { marketingOptIn: false }): Promise<ConfirmResult> {
     if (!isWellFormedToken(token)) return { status: "invalid" };
     const at = now();
+    const marketing = choice.marketingOptIn === true;
     return deps.sql.begin(async (tx) => {
       const [row] = await tx<
         {
@@ -190,7 +218,11 @@ export function createWaitlistService(deps: WaitlistDeps) {
       if (row.used_at) return { status: row.confirmed_at ? "already_confirmed" : "invalid" } as const;
       if (row.expires_at.getTime() <= at.getTime()) return { status: "expired" } as const;
       await tx`update waitlist.tokens set used_at = ${at} where token_hash = ${hashToken(token)}`;
-      await tx`update waitlist.signups set confirmed_at = ${at}, unsubscribed_at = null where id = ${row.signup_id}`;
+      await tx`
+        update waitlist.signups set
+          confirmed_at = ${at}, unsubscribed_at = null,
+          marketing_opt_in = ${marketing}, marketing_opt_in_at = ${marketing ? at : null}
+        where id = ${row.signup_id}`;
       await tx`insert into waitlist.events ${tx({
         name: "signup_confirmed",
         utm_source: row.utm_source,
@@ -204,7 +236,7 @@ export function createWaitlistService(deps: WaitlistDeps) {
     });
   }
 
-  return { register, confirm };
+  return { register, lookupConfirmation, confirm };
 }
 
 function nullUtm(utm: Utm) {
