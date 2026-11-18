@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "配信停止・登録データの削除 | おふろクエスト",
   robots: { index: false, follow: false },
-  referrer: "no-referrer",
+  referrer: "same-origin",
 };
 
 export default async function UnsubscribePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
