@@ -88,6 +88,16 @@ export function createResendSender(opts: {
   };
 }
 
+/** E2E テスト専用: 送信内容を JSON Lines でファイルに追記する（Vercel 上では使えない） */
+export function createOutboxSender(filePath: string): EmailSender {
+  return {
+    async sendConfirmation(input) {
+      const { appendFile } = await import("node:fs/promises");
+      await appendFile(filePath, `${JSON.stringify(input)}\n`, "utf8");
+    },
+  };
+}
+
 export function maskEmail(email: string): string {
   const at = email.lastIndexOf("@");
   if (at <= 0) return "***";

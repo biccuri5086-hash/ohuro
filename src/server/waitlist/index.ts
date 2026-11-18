@@ -1,6 +1,6 @@
 import "server-only";
 import postgres from "postgres";
-import { createConsoleSender, createResendSender, type EmailSender, type SenderIdentity } from "./email";
+import { createConsoleSender, createOutboxSender, createResendSender, type EmailSender, type SenderIdentity } from "./email";
 import { createWaitlistService, type WaitlistService } from "./service";
 
 /**
@@ -16,7 +16,8 @@ export type WaitlistEnv = {
   databaseUrl: string;
   baseUrl: string;
   rateLimitSecret: string;
-  emailProvider: "console" | "resend";
+  emailProvider: "console" | "resend" | "outbox";
+  outboxFile?: string;
   resendApiKey?: string;
   emailFrom?: string;
   sender: SenderIdentity;
@@ -32,8 +33,13 @@ export function readWaitlistEnv(env: Record<string, string | undefined> = proces
   if (!baseUrl) throw missing("APP_BASE_URL");
   const rateLimitSecret = env.RATE_LIMIT_SECRET;
   if (!rateLimitSecret || rateLimitSecret.length < 32) throw new WaitlistConfigError("RATE_LIMIT_SECRET は32文字以上が必要です");
-  const emailProvider = env.EMAIL_PROVIDER === "resend" ? "resend" : env.EMAIL_PROVIDER === "console" ? "console" : undefined;
+  const emailProvider =
+    env.EMAIL_PROVIDER === "resend" ? "resend" : env.EMAIL_PROVIDER === "console" ? "console" : env.EMAIL_PROVIDER === "outbox" ? "outbox" : undefined;
   if (!emailProvider) throw new WaitlistConfigError("EMAIL_PROVIDER は console または resend を指定してください");
+  // outbox は E2E テスト専用。Vercel の環境（本番・プレビュー）では使えない
+  if (emailProvider === "outbox" && (env.VERCEL_ENV || !env.EMAIL_OUTBOX_FILE)) {
+    throw new WaitlistConfigError("EMAIL_PROVIDER=outbox はローカルの E2E テスト専用です（EMAIL_OUTBOX_FILE が必要）");
+  }
   // 本番公開環境ではログ出力の仮送信を使わない
   if (emailProvider === "console" && env.VERCEL_ENV === "production") {
     throw new WaitlistConfigError("本番環境では EMAIL_PROVIDER=console を使えません");
@@ -47,6 +53,7 @@ export function readWaitlistEnv(env: Record<string, string | undefined> = proces
     rateLimitSecret,
     emailProvider,
     resendApiKey: env.RESEND_API_KEY,
+    outboxFile: env.EMAIL_OUTBOX_FILE,
     emailFrom: env.EMAIL_FROM,
     sender: {
       operatorName: env.OPERATOR_NAME || "（運営者名：公開前に記入）",
@@ -65,7 +72,9 @@ export function getWaitlist(): { service: WaitlistService; env: WaitlistEnv } {
   const sender: EmailSender =
     env.emailProvider === "resend"
       ? createResendSender({ apiKey: env.resendApiKey!, from: env.emailFrom!, sender: env.sender })
-      : createConsoleSender(env.sender);
+      : env.emailProvider === "outbox"
+        ? createOutboxSender(env.outboxFile!)
+        : createConsoleSender(env.sender);
   cached = { service: createWaitlistService({ sql, sender, baseUrl: env.baseUrl, rateLimitSecret: env.rateLimitSecret }), env };
   return cached;
 }

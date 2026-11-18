@@ -14,8 +14,8 @@
 | 依存脆弱性（開発依存を含む全体） | `npm audit --audit-level=high`（報告のみ。D-006） | CI | 稼働 |
 | ビルド | `next build` | CI | 稼働 |
 | DB 結合テスト（権限・RLS・制約） | `tests/db/` + 実 PostgreSQL（`npm run test:db`。CI は postgres:17 サービス） | CI（`db-test`）/ ローカル | 稼働（Gate 0 の `waitlist` スキーマ） |
-| E2E | Playwright 等 | CI | **未構築**（Gate 2） |
-| 実機テスト | iPhone / Android 実機 | 人間 | **未実施**（Gate 1） |
+| E2E | Playwright 1.63（`npm run test:e2e`。Android Chrome 相当・iPhone 画面サイズ・CI では WebKit も） | CI（`e2e`）/ ローカル | 稼働（Gate 0 の LP〜事前登録） |
+| 実機テスト | iPhone / Android 実機（手順: docs/gates/GATE_0_DEVICE_CHECK.md） | 人間 | **未実施**（Gate 0 の公開前・Gate 1） |
 
 `npm run verify` が CI と同じ検査をローカルで一括実行する。
 
