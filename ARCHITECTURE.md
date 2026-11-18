@@ -38,6 +38,12 @@ flowchart LR
 | サーバー → DB | 原則ユーザー JWT で RLS を通す。`service_role` はサーバー専用モジュールでのみ使い、必要性を DECISIONS.md に記録 |
 | 報酬・ガチャ | DB 関数または `src/server/` 内の単一トランザクションで、冪等キー付きで確定する |
 
+### 事前登録（Gate 0）の構成（D-011）
+- 事前登録データは `waitlist` スキーマに置き、Supabase の Data API（PostgREST）には公開しない。`anon` / `authenticated` には権限を与えず、
+  全テーブル RLS 有効・ポリシーなし（既定拒否）。アプリ本体の `auth.users` とは関連付けない。
+- Next.js のサーバー処理（`src/server/`）から PostgreSQL に直接接続する（`postgres` ドライバ 3.4.9、接続文字列はサーバー専用の環境変数）。
+- 権限・RLS は `tests/db/` の結合テストで実 PostgreSQL（CI は 17 系）に対して検証する。
+
 ### 未確定（Gate ごとに決定）
 - 端末内画像認識の方式・モデル（Gate 1）
 - サーバー処理を Next.js と Supabase DB 関数 / Edge Functions のどちらに置くか（Gate 2）

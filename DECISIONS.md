@@ -160,3 +160,17 @@ AI（Claude Code / Codex）は「提案」までしか記録できない。状�
   - `812291d`〜`e57d7a0`（Audit Gate の標準形式対応・回帰テスト・`.claude/settings.json` の deny 追加・待ち時間ルール等の文書）は Codex の監査を受けていない。
     CI（テスト 100 件・Lint・型検査・ビルド・秘密情報/ポリシー検査）と PR Guard は通過
 - 残る対応: 未監査の差分は、今後 Codex の監査対象になる PR でハーネスに触れる際に合わせて確認する。所有者が必要と判断した場合は、未監査差分の監査依頼を別途行う
+
+## D-011: 事前登録（Gate 0）のデータ構成
+- 日付: 2026-11-17
+- 状態: 提案
+- 種別: 技術選定
+- 提案者: Claude Code
+- 承認者: 未承認（Issue #9 の PR のマージで確定）
+- 承認の証跡: Issue #9 の PR
+- 変更内容: 事前登録データを Supabase の `waitlist` スキーマ（Data API 非公開・RLS 既定拒否・anon/authenticated 権限なし）に保存し、
+  Next.js サーバーから `postgres` ドライバ 3.4.9 で直接接続する。CI に実 PostgreSQL 17 の DB 結合テスト（`db-test`）を追加
+- 変更理由: 公開 API からの漏えい・未認証での一覧取得を構造的に防ぐため。アプリ本体のアカウントと分離するため。
+  `postgres` 4 系は 2026-10 公開と新しいため、実績のある 3 系を採用
+- 影響する文書・コード: supabase/migrations, tests/db, .github/workflows/ci.yml, DATA_HANDLING.md, ARCHITECTURE.md, TEST_PLAN.md, RELEASE_CHECKLIST.md
+- 保留: 保存期間（所有者が公開前に決定）、本番 Supabase への適用（所有者の承認後）
