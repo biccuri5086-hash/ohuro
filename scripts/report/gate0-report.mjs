@@ -69,14 +69,17 @@ export function computeRows({ funnel, summary, adMetrics }) {
 }
 
 /** 任意アンケートの選択肢ごとの件数（任意回答者のみ） */
+// 件数の入れ物はプロトタイプを持たないオブジェクトにする。保存済みの回答に `__proto__`・`constructor` などが
+// 混ざっても、継承プロパティと衝突して件数が壊れないようにする（入力側の検査に加えた多重の防御。Codex 指摘 PR #31）
 export function aggregateSurvey(rows) {
-  const counts = {};
+  const counts = Object.create(null);
   for (const r of rows) {
     const a = r.survey ?? {};
     for (const [k, v] of Object.entries(a)) {
       if (k === "free_text") continue;
       for (const val of Array.isArray(v) ? v : [v]) {
-        counts[k] ??= {};
+        if (typeof val !== "string") continue;
+        counts[k] ??= Object.create(null);
         counts[k][val] = (counts[k][val] ?? 0) + 1;
       }
     }

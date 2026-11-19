@@ -4,10 +4,15 @@
 alter table waitlist.tokens drop constraint if exists tokens_purpose_check;
 alter table waitlist.tokens add constraint tokens_purpose_check check (purpose in ('confirm', 'unsubscribe', 'survey'));
 
+-- 初回の確認日時。配信停止後の再登録・再確認でも消さず、確認イベントを 1 登録につき 1 回だけ記録するために使う
+-- （EXPERIMENT_PLAN.md 4.2。Codex 指摘 PR #31）
+alter table waitlist.signups add column if not exists first_confirmed_at timestamptz;
+update waitlist.signups set first_confirmed_at = confirmed_at where first_confirmed_at is null and confirmed_at is not null;
+
 -- 広告（utm_content）別のファネル。重複除外ルール（EXPERIMENT_PLAN.md 4章）:
 --  - ブラウザ側のイベントは「イベント名ごとの異なる session_id の数」で数える（同じタブでの再表示は1回）
 --  - session_id がないイベントは数えない
---  - 登録・確認はサーバー側で1登録につき1回だけ記録される
+--  - 登録・確認はサーバー側で1登録につき1回だけ記録される（確認は first_confirmed_at が空のときだけ記録。再確認は数えない）
 --  - テスト（is_test）は除外する
 create view waitlist.funnel_by_creative
 with (security_invoker = true) as

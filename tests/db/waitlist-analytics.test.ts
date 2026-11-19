@@ -69,6 +69,18 @@ describe("計測イベント（G0-5）", () => {
     expect([b.lp_sessions, b.signups_confirmed].map(Number)).toEqual([1, 0]);
   });
 
+  it("配信停止後の再登録・再確認は、確認を重複して数えない（Codex 指摘 PR #31）", async () => {
+    await registerAndConfirm("again@ohuro-mail.jp", { utm_content: "ad_a_v1" });
+    await sql`update waitlist.signups set unsubscribed_at = now()`;
+    clock = new Date(clock.getTime() + 61_000);
+    expect((await registerAndConfirm("again@ohuro-mail.jp", { utm_content: "ad_a_v1" })).status).toBe("confirmed");
+    const [a] = await sql`select signups_created, signups_confirmed from waitlist.funnel_by_creative where utm_content = 'ad_a_v1'`;
+    expect([Number(a!.signups_created), Number(a!.signups_confirmed)]).toEqual([1, 1]);
+    const [s] = await sql`select confirmed_at, first_confirmed_at from waitlist.signups`;
+    expect(s!.confirmed_at).not.toBeNull();
+    expect(s!.first_confirmed_at!.getTime()).toBeLessThan(s!.confirmed_at!.getTime()); // 初回の確認日時は残る
+  });
+
   it("anon / authenticated はファネルを読めない", async () => {
     for (const role of ["anon", "authenticated"] as const) {
       await expect(asRole(sql, role, (tx) => tx.unsafe("select * from waitlist.funnel_by_creative"))).rejects.toThrow(/permission denied/);
