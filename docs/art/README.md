@@ -16,7 +16,8 @@
 | [CHARACTER_SPEC.md](CHARACTER_SPEC.md) | ペットのシルエット・比率・顔パーツ・色・アンカー |
 | [ANIMATION_SPEC.md](ANIMATION_SPEC.md) | 表情・ポーズ・アニメーションの制作規則 |
 | [ASSET_SPEC.md](ASSET_SPEC.md) | 家具・衣装・背景の制作規格 |
-| `baseline/` | 変更前の基準画像（現在の絵）。変更前後の比較に使う |
+| [SCREENSHOTS.md](SCREENSHOTS.md) | 画面スクリーンショット検証と変更前後の比較の手順（Issue #25） |
+| `baseline/` | 変更前の基準画像（現在の絵）。仕様の記録用 |
 
 ## 現行の絵の所在（2026-11-19 時点）
 
