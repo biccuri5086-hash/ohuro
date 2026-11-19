@@ -174,3 +174,20 @@ AI（Claude Code / Codex）は「提案」までしか記録できない。状�
   `postgres` 4 系は 2026-10 公開と新しいため、実績のある 3 系を採用
 - 影響する文書・コード: supabase/migrations, tests/db, .github/workflows/ci.yml, DATA_HANDLING.md, ARCHITECTURE.md, TEST_PLAN.md, RELEASE_CHECKLIST.md
 - 保留: 保存期間（所有者が公開前に決定）、本番 Supabase への適用（所有者の承認後）
+
+## D-012: 2D アート規格（案）と制作方針
+- 日付: 2026-11-19
+- 状態: 提案（方針は所有者が会話で承認済み。規格の数値は未承認）
+- 種別: 仕様（見た目の規格）・ツール選定
+- 提案者: Claude Code
+- 承認者: 方針は所有者（2026-11-19 のセッション内で「推奨のものでお願いします」と回答）。規格文書（`docs/art/`）は未承認（Issue #23 の PR のマージで確定）
+- 承認の証跡: 方針 = セッション内の所有者の回答。規格 = Issue #23 の PR
+- 変更内容:
+  1. 素材の正本は自作の SVG とし、画像生成 AI の素材・ラスター画像は使わない。全画面 2D・3D 化しない
+  2. 現在のペット・世界観を出発点とし、変更は「案」として画像で提示し、承認後に実装する（Issue #27）
+  3. Figma MCP・Frontend Design Plugin は導入しない。Playwright は既存の `@playwright/test` を使い、プラグインは追加しない
+  4. `docs/art/` に規格文書（案）を追加。実装は Issue #24〜#27 に分割
+- 変更理由: 見た目の統一と権利・商用利用の確認を保つため。この環境には画像生成機能がなく、AI 生成素材は統一感・権利の確認が難しいため
+- 影響する文書・コード: docs/art/（新規）。CLAUDE.md の文書体系の表への追加は Issue #26（`approved:harness-change`）
+- 保留: 素材のライセンス・商用利用条件の確認（所有者）、パレット・線の太さの確定（Issue #27 のデザイン案）
+
