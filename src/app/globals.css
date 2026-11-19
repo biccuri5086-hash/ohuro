@@ -1,0 +1,355 @@
+/* おふろクエスト LP: スマホ最優先・2D ゲーム風・軽量（外部フォント・アニメーションなし） */
+:root {
+  color-scheme: light;
+  --bg: #fdf6ec;
+  --surface: #ffffff;
+  --ink: #3b2a22;
+  --ink-soft: #6a5448;
+  --line: #5b3f33;
+  --accent: #2b7bb9;
+  --accent-ink: #ffffff;
+  --accent-shadow: #1d5a88;
+  --warm: #ffe7c7;
+  --caution-bg: #fff2d6;
+  --danger: #c0392b;
+  --radius: 14px;
+  --gutter: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Yu Gothic UI", Meiryo, sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.4;
+}
+
+.lp,
+.simple-page {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 var(--gutter) 48px;
+}
+
+.simple-page {
+  padding-top: 32px;
+}
+
+.simple-page section {
+  margin: 28px 0;
+}
+
+/* ファーストビュー */
+.hero {
+  text-align: center;
+  padding: 28px 0 12px;
+}
+
+.badge {
+  display: inline-block;
+  margin: 0 0 12px;
+  padding: 4px 12px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--warm);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.hero-pet {
+  width: 140px;
+  height: 140px;
+  display: block;
+  margin: 0 auto 8px;
+}
+
+.hero-title {
+  font-size: 26px;
+  margin: 8px 0 12px;
+}
+
+/* 見出しを意味のまとまりで改行する（句読点だけが行頭に残らないように） */
+.nb {
+  display: inline-block;
+}
+
+.hero-lead {
+  font-size: 17px;
+  margin: 0 0 20px;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 10px 0 0;
+}
+
+/* セクション */
+.section {
+  margin: 28px 0;
+  padding: 20px;
+  background: var(--surface);
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 4px 0 var(--line);
+}
+
+.section-title {
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+
+.section p {
+  margin: 0 0 12px;
+}
+
+/* 機能紹介 */
+.features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.feature-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+}
+
+.feature-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+}
+
+.feature-title {
+  font-size: 16px;
+  margin: 0 0 4px;
+}
+
+.feature-card p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.room {
+  margin: 16px 0 0;
+}
+
+.room-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 写真チェック */
+.photo-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.photo-steps li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 4px;
+  padding: 10px;
+  border: 2px dashed var(--line);
+  border-radius: 12px;
+  font-size: 14px;
+}
+
+.step-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.caution {
+  padding: 12px;
+  background: var(--caution-bg);
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+/* ボタン */
+.button-primary,
+.button-danger {
+  display: inline-block;
+  min-height: 52px;
+  padding: 12px 24px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 4px 0 var(--accent-shadow);
+}
+
+.button-danger {
+  background: var(--danger);
+  box-shadow: 0 4px 0 #7f241b;
+}
+
+.button-block {
+  display: block;
+  width: 100%;
+}
+
+.button-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.button-primary:focus-visible,
+.button-danger:focus-visible,
+.field-input:focus-visible {
+  outline: 3px solid #ffb703;
+  outline-offset: 2px;
+}
+
+/* フォーム */
+.signup-form {
+  display: grid;
+  gap: 12px;
+}
+
+.field-label {
+  font-weight: 700;
+}
+
+.field-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: 3px solid var(--line);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 17px; /* iOS Safari で 16px 未満だと入力時に拡大されるため */
+  background: #fff;
+  color: var(--ink);
+}
+
+.check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 15px;
+}
+
+.check input {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  margin-top: 3px;
+}
+
+.hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.form-error {
+  margin: 0;
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.form-note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.signup-done {
+  padding: 16px;
+  background: #e6f4ea;
+  border: 2px solid #2e7d4f;
+  border-radius: 12px;
+}
+
+.signup-done-title {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* FAQ */
+.faq {
+  margin: 0;
+}
+
+.faq-item {
+  padding: 12px 0;
+  border-top: 2px dashed #d9c3b2;
+}
+
+.faq-item:first-child {
+  border-top: 0;
+}
+
+.faq dt {
+  font-weight: 700;
+}
+
+.faq dd {
+  margin: 4px 0 0;
+}
+
+.footer {
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-soft);
+  padding: 8px 0 24px;
+}
+
+@media (min-width: 720px) {
+  .hero-title {
+    font-size: 32px;
+  }
+  .features {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+  }
+}
