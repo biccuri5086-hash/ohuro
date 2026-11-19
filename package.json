@@ -19,6 +19,7 @@
     "verify": "npm run typecheck && npm run lint && npm run test && npm run check:secrets && npm run check:policy && npm run check:migrations && npm run build",
     "test:db": "vitest run --config vitest.db.config.mts",
     "ads:render": "node scripts/ads/render-ads.mjs",
+    "art:build": "node scripts/art/build-art.mjs",
     "art:shots": "node scripts/art/capture.mjs",
     "art:compare": "node scripts/art/compare.mjs"
   },

@@ -16,6 +16,7 @@
 | [CHARACTER_SPEC.md](CHARACTER_SPEC.md) | ペットのシルエット・比率・顔パーツ・色・アンカー |
 | [ANIMATION_SPEC.md](ANIMATION_SPEC.md) | 表情・ポーズ・アニメーションの制作規則 |
 | [ASSET_SPEC.md](ASSET_SPEC.md) | 家具・衣装・背景の制作規格 |
+| [PIPELINE.md](PIPELINE.md) | 素材パイプライン（SVG の正本・検査・素材台帳・生成）の手順（Issue #24） |
 | [SCREENSHOTS.md](SCREENSHOTS.md) | 画面スクリーンショット検証と変更前後の比較の手順（Issue #25） |
 | `baseline/` | 変更前の基準画像（現在の絵）。仕様の記録用 |
 
@@ -31,7 +32,7 @@
 
 ## 現状の不整合・課題（観察した事実）
 
-1. **ペットの絵が 2 か所にある**（`Illustrations.tsx` と `render-ads.mjs`）。片方だけ直すと見た目がズレる → Issue #24 で正本を 1 か所にする
+1. **ペットの絵が 2 か所にある**（`Illustrations.tsx` と `render-ads.mjs`）。片方だけ直すと見た目がズレる → **Issue #24 で解消**（正本 `art/src/pet.svg` から両方を生成。[PIPELINE.md](PIPELINE.md)）
 2. **部屋の中のペットは簡略版**。口・ほっぺ・目のハイライトがない。縮小のため体の線を 6（0.48 倍で実効 約 2.9）にしており、単体のペット（線 4 / 全体 120）より全体比で太い
 3. **線の太さの種類が多い**。`Illustrations.tsx` では 2・2.5・3・3.5・4・5・6 の 7 種
 4. **ペットの表情・ポーズは 1 種類だけ**

@@ -1,26 +1,20 @@
 #!/usr/bin/env node
 // 広告素材の生成（Issue #15）。ads.config.mjs を元に、シーン画像 → 縦型動画（MP4・無音）・サムネイル・確認用の一覧画像を作る。
 // 必要なもの: Playwright（Chromium）、ffmpeg、日本語フォント（IPAGothic）。CI では実行しない（生成物をコミットする）。
-// 使用素材: すべて本スクリプト内のオリジナル SVG。フォントは IPA ゴシック（IPA フォントライセンス v1.0）。
+// 使用素材: ペットは正本 art/src/pet.svg（生成: art.generated.mjs）、それ以外は本スクリプト内のオリジナル SVG。フォントは IPA ゴシック（art/ASSETS.json に記録）。
 import { execFileSync } from "node:child_process";
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { ADS, landingUrl, VIDEO } from "./ads.config.mjs";
+import { ART as ART_ASSETS } from "./art.generated.mjs";
 
 const require = createRequire(import.meta.url);
 const OUT = join(process.cwd(), "marketing", "ads");
 const L = "#5b3f33";
 
-const PET = `
-<path d="M44 22c-6-6 2-12-2-18M62 18c-5-6 3-11-1-17M80 22c-6-6 2-12-2-18" stroke="#b9d9ec" stroke-width="4" fill="none" stroke-linecap="round"/>
-<path d="M20 82c0-26 18-44 40-44s40 18 40 44c0 16-14 24-40 24S20 98 20 82z" fill="#ffd6bf" stroke="${L}" stroke-width="4" stroke-linejoin="round"/>
-<path d="M36 46c8-10 40-10 48 0l-4 8c-10-6-30-6-40 0z" fill="#fff" stroke="${L}" stroke-width="3.5" stroke-linejoin="round"/>
-<path d="M42 46h36" stroke="#6fb3dd" stroke-width="3" stroke-linecap="round"/>
-<circle cx="47" cy="74" r="4.5" fill="${L}"/><circle cx="73" cy="74" r="4.5" fill="${L}"/>
-<circle cx="45" cy="72.5" r="1.4" fill="#fff"/><circle cx="71" cy="72.5" r="1.4" fill="#fff"/>
-<ellipse cx="38" cy="84" rx="6" ry="3.5" fill="#ffab9a"/><ellipse cx="82" cy="84" rx="6" ry="3.5" fill="#ffab9a"/>
-<path d="M55 84q5 5 10 0" stroke="${L}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+// ペットの絵は正本 art/src/pet.svg から生成したものを使う（Issue #24。ここで描かない）
+const PET = ART_ASSETS.pet.inner;
 
 const coin = (x, y, r = 34) => `<g transform="translate(${x} ${y})"><circle r="${r}" fill="#ffd35c" stroke="${L}" stroke-width="6"/><circle r="${r * 0.62}" fill="none" stroke="#e3a92a" stroke-width="5"/><circle cx="${-r * 0.25}" cy="${-r * 0.2}" r="${r * 0.14}" fill="#fff"/></g>`;
 
