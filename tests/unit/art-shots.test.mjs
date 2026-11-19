@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { diffPixels } from "../../scripts/art/image-diff.mjs";
-import { problemsOf } from "../../scripts/art/capture.mjs";
+import { externalRedirectTarget, isInternal, problemsOf } from "../../scripts/art/capture.mjs";
 import { DEVICE_SCALE_FACTOR, FREEZE_CSS, LP_PATH, OUTPUT_DIR, TARGETS, VIEWPORTS } from "../../scripts/art/shots.config.mjs";
 
 const img = (width, height, rgba) => ({ width, height, data: Uint8ClampedArray.from({ length: width * height * 4 }, (_, i) => rgba[i % 4]) });
@@ -29,7 +29,15 @@ describe("差分計算（Issue #25）", () => {
 
   it("大きさが違えば、重ならない部分をすべて変化として数える", () => {
     const d = diffPixels(img(2, 2, [0, 0, 0, 255]), img(3, 2, [0, 0, 0, 255]), 16);
-    expect([d.width, d.height, d.changed, d.sizeMatches]).toEqual([3, 2, 2, false]);
+    expect([d.width, d.height, d.changed, d.total, d.sizeMatches]).toEqual([3, 2, 2, 6, false]);
+  });
+
+  it("横長と縦長を比べても、どちらの画像にもない画素は数えない（Codex 指摘 PR #30）", () => {
+    // 2×1 と 1×2: 重なり 1 画素（同色）、片方にしかない画素が 2 個、どちらにもない角が 1 個
+    const d = diffPixels(img(2, 1, [5, 5, 5, 255]), img(1, 2, [5, 5, 5, 255]), 16);
+    expect([d.changed, d.total]).toEqual([2, 3]);
+    expect(Array.from(d.mask)).toEqual([0, 1, 1, 2]);
+    expect(d.ratio).toBeCloseTo(2 / 3);
   });
 
   it("片方がない（区間が見つからない）場合は全体が変化", () => {
@@ -60,6 +68,25 @@ describe("撮影条件（Issue #25）", () => {
   it("出力先はコミットしない場所", async () => {
     const { readFileSync } = await import("node:fs");
     expect(readFileSync(".gitignore", "utf8")).toContain(`${OUTPUT_DIR}/`);
+  });
+
+  it("同一オリジンと data: / blob: だけを内部とみなす", () => {
+    const o = "http://127.0.0.1:3000";
+    expect(isInternal("http://127.0.0.1:3000/_next/x.js", o)).toBe(true);
+    expect(isInternal("data:image/png;base64,AAA", o)).toBe(true);
+    expect(isInternal("http://127.0.0.1:3001/x", o)).toBe(false);
+    expect(isInternal("https://fonts.example/x.css", o)).toBe(false);
+    expect(isInternal("not a url", o)).toBe(false);
+  });
+
+  it("同一オリジンから外部へのリダイレクトを外部通信として検出する（Codex 指摘 PR #30）", () => {
+    const o = "http://127.0.0.1:3000";
+    const u = "http://127.0.0.1:3000/redirect";
+    expect(externalRedirectTarget(u, o, 302, "https://tracker.example/p.gif")).toBe("https://tracker.example/p.gif");
+    expect(externalRedirectTarget(u, o, 307, "//cdn.example/x.js")).toBe("http://cdn.example/x.js");
+    expect(externalRedirectTarget(u, o, 301, "/next")).toBeNull(); // 同一オリジン内の転送は許可
+    expect(externalRedirectTarget(u, o, 200, "https://tracker.example/")).toBeNull(); // リダイレクトではない
+    expect(externalRedirectTarget(u, o, 302, undefined)).toBeNull();
   });
 
   it("横スクロールと外部への通信を問題として報告する", () => {
