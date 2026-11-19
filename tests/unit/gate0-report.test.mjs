@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateSurvey, computeRows, parseAdMetricsCsv, renderReport } from "../../scripts/report/gate0-report.mjs";
+import { aggregateSurvey, compareRates, computeRows, parseAdMetricsCsv, renderReport, wilsonInterval } from "../../scripts/report/gate0-report.mjs";
 
 const funnel = [
   { utm_content: "ad_a_v1", lp_sessions: 200, form_view_sessions: 120, form_submit_sessions: 20, signups_created: 18, signups_confirmed: 10 },
@@ -61,5 +61,22 @@ describe("Gate 0 レポート", () => {
     expect(md).toContain("回答者: 2人");
     expect(md).toContain("登録者全体の意見ではありません");
     expect(md).not.toContain("秘密の本文");
+  });
+});
+
+describe("サンプル数の限界の表示", () => {
+  it("Wilson 区間: 既知の値と一致し、0 件でも区間を返す", () => {
+    const [lo, hi] = wilsonInterval(10, 200);
+    expect(lo).toBeCloseTo(0.0275, 3);
+    expect(hi).toBeCloseTo(0.0896, 3);
+    const [lo0, hi0] = wilsonInterval(0, 20);
+    expect(lo0).toBe(0);
+    expect(hi0).toBeGreaterThan(0.1);
+    expect(wilsonInterval(0, 0)).toBeNull();
+  });
+  it("小さな差は優劣不明、データがなければ比較しない", () => {
+    expect(compareRates({ utm_content: "ad_a_v1", signups_confirmed: 6, lp_sessions: 100 }, { utm_content: "ad_b_v1", signups_confirmed: 4, lp_sessions: 100 })).toContain("優劣不明");
+    expect(compareRates({ utm_content: "ad_a_v1", signups_confirmed: 60, lp_sessions: 200 }, { utm_content: "ad_b_v1", signups_confirmed: 5, lp_sessions: 200 })).toContain("ad_a_v1 が高い傾向");
+    expect(compareRates({ utm_content: "ad_a_v1", signups_confirmed: 0, lp_sessions: 0 }, { utm_content: "ad_b_v1", signups_confirmed: 1, lp_sessions: 10 })).toContain("データ不足");
   });
 });

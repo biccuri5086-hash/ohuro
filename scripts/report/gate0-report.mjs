@@ -37,6 +37,29 @@ const pct = (v) => (v === null ? NA : `${(v * 100).toFixed(1)}%`);
 const yen = (v) => (v === null ? NA : `${Math.round(v).toLocaleString("ja-JP")}円`);
 const int = (v) => (v === null || v === undefined ? NA : String(v));
 
+/** 割合の 95% 信頼区間（Wilson 法）。n=0 は null */
+export function wilsonInterval(successes, n, z = 1.96) {
+  if (n === null || successes === null || n <= 0) return null;
+  const p = successes / n;
+  const denom = 1 + (z * z) / n;
+  const center = (p + (z * z) / (2 * n)) / denom;
+  const half = (z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n))) / denom;
+  return [Math.max(0, center - half), Math.min(1, center + half)];
+}
+
+/**
+ * 2 つの広告の登録率を比べる。信頼区間が重なる・データ不足なら「優劣不明」。
+ * 統計的検定の代わりではなく、少数サンプルで差を断定しないための目安。
+ */
+export function compareRates(a, b) {
+  const ia = wilsonInterval(a.signups_confirmed, a.lp_sessions);
+  const ib = wilsonInterval(b.signups_confirmed, b.lp_sessions);
+  if (!ia || !ib) return "データ不足（比較できません）";
+  if (ia[0] > ib[1]) return `${a.utm_content} が高い傾向（区間が重ならない。ただし少額テストのため確定ではない）`;
+  if (ib[0] > ia[1]) return `${b.utm_content} が高い傾向（区間が重ならない。ただし少額テストのため確定ではない）`;
+  return "優劣不明（信頼区間が重なる）";
+}
+
 /** 広告（utm_content）ごとの指標を計算する */
 export function computeRows({ funnel, summary, adMetrics }) {
   const keys = new Set([...funnel.map((f) => f.utm_content), ...adMetrics.map((a) => a.utm_content)]);
@@ -63,6 +86,7 @@ export function computeRows({ funnel, summary, adMetrics }) {
       signups_confirmed: confirmed,
       signups_confirmed_active: s ? Number(s.signups_confirmed_active) : null,
       registration_rate: ratio(confirmed, lp),
+      registration_rate_ci: wilsonInterval(confirmed, lp),
       cost_per_confirmed: ratio(spend, confirmed),
     };
   });
@@ -108,6 +132,16 @@ export function renderReport({ rows, survey, generatedAt }) {
       (r) =>
         `| ${r.utm_content} | ${yen(r.spend)} | ${int(r.impressions)} | ${int(r.clicks)} | ${pct(r.ctr)} | ${yen(r.cpc)} | ${int(r.lp_sessions)} | ${int(r.form_view_sessions)} | ${int(r.form_submit_sessions)} | ${int(r.signups_created)} | ${int(r.signups_confirmed)} | ${pct(r.registration_rate)} | ${yen(r.cost_per_confirmed)} |`,
     ),
+    "",
+    "### 登録率の幅（95% 信頼区間・Wilson 法）",
+    "",
+    ...rows.map((r) => `- ${r.utm_content}: ${r.registration_rate_ci ? `${pct(r.registration_rate_ci[0])}〜${pct(r.registration_rate_ci[1])}（LP訪問 ${r.lp_sessions}）` : NA}`),
+    "",
+    `- 広告 A / B の比較: ${(() => {
+      const a = rows.find((r) => r.utm_content === "ad_a_v1");
+      const b = rows.find((r) => r.utm_content === "ad_b_v1");
+      return a && b ? compareRates(a, b) : "データ不足（比較できません）";
+    })()}`,
     "",
     `- 総広告費: ${yen(total("spend"))}`,
     `- 確認済み登録（合計）: ${int(total("signups_confirmed"))}`,
