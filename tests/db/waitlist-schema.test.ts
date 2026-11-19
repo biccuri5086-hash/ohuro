@@ -114,6 +114,7 @@ describe("waitlist スキーマ（G0-1）", () => {
         "created_at",
         "email",
         "email_normalized",
+        "first_confirmed_at",
         "id",
         "is_test",
         "last_confirmation_sent_at",
