@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CONSENT_TEXT_MARKETING } from "@/lib/waitlist/consent";
 import { getWaitlist } from "@/server/waitlist";
 
 export const metadata: Metadata = {
@@ -34,7 +35,7 @@ export default async function ConfirmPage({ searchParams }: { searchParams: Prom
             <p>
               <label>
                 <input type="checkbox" name="marketing_opt_in" defaultChecked={marketingDefault} />{" "}
-                おふろクエストからのお知らせ（宣伝を含むメール）も受け取る（任意）
+                {CONSENT_TEXT_MARKETING}
               </label>
             </p>
             <p>リリース情報の受け取りには、このチェックは必要ありません。</p>

@@ -17,5 +17,5 @@ export const WAITLIST_LIMITS = {
   minFormElapsedMs: 2000,
 } as const;
 
-/** 同意文面のバージョン。文面を変えたら更新する（G0-6 で確定） */
-export const CONSENT_VERSION = "2026-11-17-draft";
+// 同意文面の版は src/lib/waitlist/consent.ts が唯一の定義
+export { CONSENT_VERSION } from "@/lib/waitlist/consent";
