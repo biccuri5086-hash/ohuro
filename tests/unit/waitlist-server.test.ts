@@ -37,16 +37,22 @@ describe("tokens", () => {
 
 describe("確認メール", () => {
   it("確認リンク・開発中・送信者表示を含み、リンクを HTML エスケープする", () => {
-    const m = buildConfirmationEmail('https://ohuro.example/confirm?token=abc&x="<>', sender);
+    const m = buildConfirmationEmail('https://ohuro.example/confirm?token=abc&x="<>', "https://ohuro.example/unsubscribe?token=u", sender);
     expect(m.text).toContain("https://ohuro.example/confirm?token=abc");
     expect(m.text).toContain("開発中");
     expect(m.text).toContain("送信者: テスト運営");
     expect(m.html).toContain("&amp;x=&quot;&lt;&gt;");
     expect(m.html).not.toContain('"<>');
   });
+  it("配信停止・削除リンクを本文に含む", () => {
+    const m = buildConfirmationEmail("https://ohuro.example/confirm?token=c", "https://ohuro.example/unsubscribe?token=u", sender);
+    expect(m.text).toContain("配信停止・登録データの削除");
+    expect(m.text).toContain("https://ohuro.example/unsubscribe?token=u");
+    expect(m.html).toContain("https://ohuro.example/unsubscribe?token=u");
+  });
   it("開発用の送信はメールアドレスを伏せてログに出す", async () => {
     const log = vi.fn();
-    await createConsoleSender(sender, log).sendConfirmation({ to: "secret.user@example.com", confirmUrl: "https://x/confirm" });
+    await createConsoleSender(sender, log).sendConfirmation({ to: "secret.user@example.com", confirmUrl: "https://x/confirm", unsubscribeUrl: "https://x/u", oneClickUrl: "https://x/o" });
     expect(log.mock.calls[0]![0]).not.toContain("secret.user");
     expect(maskEmail("secret.user@example.com")).toBe("s***@example.com");
   });
@@ -56,6 +62,8 @@ describe("確認メール", () => {
     await createConsoleSender(sender, log).sendConfirmation({
       to: "a@example.com",
       confirmUrl: `https://ohuro.example/confirm?token=${token}`,
+      unsubscribeUrl: `https://ohuro.example/unsubscribe?token=${token}`,
+      oneClickUrl: `https://ohuro.example/api/waitlist/one-click?token=${token}`,
     });
     const line = String(log.mock.calls[0]![0]);
     expect(line).not.toContain(token);
@@ -65,12 +73,18 @@ describe("確認メール", () => {
   it("Resend 送信の失敗時、エラーにメールアドレスと API キーを含めない", async () => {
     const fetchImpl = vi.fn(async () => new Response("nope", { status: 422 }));
     const s = createResendSender({ apiKey: FAKE_KEY, from: "o@ohuro.example", sender, fetchImpl });
-    const err = await s.sendConfirmation({ to: "victim@example.com", confirmUrl: "https://x" }).catch((e: Error) => e);
+    const err = await s
+      .sendConfirmation({ to: "victim@example.com", confirmUrl: "https://x", unsubscribeUrl: "https://x/u", oneClickUrl: "https://x/o?token=t" })
+      .catch((e: Error) => e);
     expect(String(err)).not.toContain("victim@example.com");
     expect(String(err)).not.toContain(FAKE_KEY);
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://api.resend.com/emails");
-    expect(JSON.parse(String(init.body)).to).toEqual(["victim@example.com"]);
+    const payload = JSON.parse(String(init.body));
+    expect(payload.to).toEqual(["victim@example.com"]);
+    // RFC 8058 ワンクリック配信停止のヘッダー
+    expect(payload.headers["List-Unsubscribe"]).toBe("<https://x/o?token=t>");
+    expect(payload.headers["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");
   });
 });
 
