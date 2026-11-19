@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "事前登録の確認結果 | おふろクエスト",
   robots: { index: false, follow: false },
+  referrer: "same-origin",
 };
 
 const MESSAGES: Record<string, { title: string; body: string }> = {
@@ -29,13 +30,23 @@ const MESSAGES: Record<string, { title: string; body: string }> = {
   },
 };
 
-export default async function ConfirmResultPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { status } = await searchParams;
+export default async function ConfirmResultPage({ searchParams }: { searchParams: Promise<{ status?: string; survey?: string }> }) {
+  const { status, survey } = await searchParams;
   const m = MESSAGES[status ?? ""] ?? MESSAGES.invalid!;
+  const surveyOk = status === "confirmed" && typeof survey === "string" && /^[A-Za-z0-9_-]{43}$/.test(survey);
   return (
     <main className="simple-page">
       <h1>{m.title}</h1>
       <p>{m.body}</p>
+      {surveyOk && (
+        <section className="section">
+          <h2 className="section-title">任意アンケートへのご協力のお願い</h2>
+          <p>開発の参考にするため、4問ほどの簡単なアンケートにご協力ください。回答は任意で、答えなくても登録は完了しています。</p>
+          <a href={`/survey?token=${survey}`} className="button-primary button-block">
+            アンケートに答える（任意）
+          </a>
+        </section>
+      )}
       <p>
         <Link href="/">トップページへ戻る</Link>
       </p>

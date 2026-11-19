@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { CoinIcon, PetIllustration, PhoneIcon, RoomIllustration, TowelIcon } from "@/components/lp/Illustrations";
-import { SignupForm } from "@/components/lp/SignupForm";
+import { PageViewTracker, TrackedSignupForm } from "@/components/lp/Tracking";
 
 export const metadata: Metadata = {
   title: "おふろクエスト（開発中）| お風呂が、毎日の小さなクエストになる。",
@@ -68,6 +68,7 @@ const FAQ = [
 export default function Home() {
   return (
     <main className="lp">
+      <PageViewTracker />
       <header className="hero">
         <p className="badge">開発中のアプリです・公開日未定</p>
         <PetIllustration className="hero-pet" />
@@ -157,7 +158,7 @@ export default function Home() {
       <section className="section signup" id="signup">
         <h2 className="section-title">無料事前登録</h2>
         <p>メールアドレスだけで登録できます。公開が決まったらお知らせします。</p>
-        <SignupForm />
+        <TrackedSignupForm />
       </section>
 
       <section className="section">
