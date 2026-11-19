@@ -42,6 +42,15 @@ describe("Gate 0 レポート", () => {
     expect(md).toContain("総広告費: 未取得");
     expect(md).toContain("統計的に十分な市場調査ではありません");
   });
+  it("保存済みの回答に継承プロパティ名が混ざっても、件数は数値のまま壊れない（Codex 指摘 PR #31）", () => {
+    const s = aggregateSurvey([
+      { survey: { intent: "constructor", interests: ["__proto__", "pet"] } },
+      { survey: { intent: "constructor", interests: ["pet"] } },
+    ]);
+    expect(s.counts.intent.constructor).toBe(2);
+    expect(s.counts.interests.__proto__).toBe(1);
+    expect(s.counts.interests.pet).toBe(2);
+  });
   it("アンケートは任意回答者のみの集計と明記し、自由回答の本文は載せない", () => {
     const s = aggregateSurvey([
       { survey: { photo_acceptance: "yes", interests: ["pet", "gacha"], free_text: "秘密の本文" } },

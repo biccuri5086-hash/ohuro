@@ -63,17 +63,20 @@ export type SurveyAnswers = {
 
 type QuestionKey = keyof typeof SURVEY_QUESTIONS;
 
-/** 回答を検査して正規化する。すべて任意。1問も回答がなければ null */
+/**
+ * 回答を検査して正規化する。すべて任意。1問も回答がなければ null。
+ * 選択肢は定義済みのもの（自身のプロパティ）だけを許可する。`__proto__`・`constructor` 等の継承プロパティは拒否（Codex 指摘 PR #31）
+ */
 export function parseSurveyAnswers(input: Record<string, unknown>): SurveyAnswers | null {
   const out: SurveyAnswers = {};
   for (const key of Object.keys(SURVEY_QUESTIONS) as QuestionKey[]) {
     const q = SURVEY_QUESTIONS[key];
     const raw = input[key];
     if (q.type === "single") {
-      if (typeof raw === "string" && raw in q.options) (out as Record<string, unknown>)[key] = raw;
+      if (typeof raw === "string" && Object.hasOwn(q.options, raw)) (out as Record<string, unknown>)[key] = raw;
     } else {
       const list = Array.isArray(raw) ? raw : typeof raw === "string" ? [raw] : [];
-      const valid = [...new Set(list.filter((v): v is string => typeof v === "string" && v in q.options))];
+      const valid = [...new Set(list.filter((v): v is string => typeof v === "string" && Object.hasOwn(q.options, v)))];
       if (valid.length > 0) out.interests = valid.includes("none") ? ["none"] : valid.sort();
     }
   }

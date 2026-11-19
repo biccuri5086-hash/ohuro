@@ -231,6 +231,7 @@ export function createWaitlistService(deps: WaitlistDeps) {
           expires_at: Date;
           used_at: Date | null;
           confirmed_at: Date | null;
+          first_confirmed_at: Date | null;
           is_test: boolean;
           utm_source: string | null;
           utm_medium: string | null;
@@ -238,7 +239,7 @@ export function createWaitlistService(deps: WaitlistDeps) {
           utm_content: string | null;
         }[]
       >`
-        select t.signup_id, t.expires_at, t.used_at, s.confirmed_at, s.is_test,
+        select t.signup_id, t.expires_at, t.used_at, s.confirmed_at, s.first_confirmed_at, s.is_test,
                s.utm_source, s.utm_medium, s.utm_campaign, s.utm_content
         from waitlist.tokens t join waitlist.signups s on s.id = t.signup_id
         where t.token_hash = ${hashToken(token)} and t.purpose = 'confirm'
@@ -249,7 +250,7 @@ export function createWaitlistService(deps: WaitlistDeps) {
       await tx`update waitlist.tokens set used_at = ${at} where token_hash = ${hashToken(token)}`;
       await tx`
         update waitlist.signups set
-          confirmed_at = ${at}, unsubscribed_at = null,
+          confirmed_at = ${at}, first_confirmed_at = coalesce(first_confirmed_at, ${at}), unsubscribed_at = null,
           marketing_opt_in = ${marketing}, marketing_opt_in_at = ${marketing ? at : null}
         where id = ${row.signup_id}`;
       const surveyToken = generateToken();
@@ -260,15 +261,19 @@ export function createWaitlistService(deps: WaitlistDeps) {
         created_at: at,
         expires_at: new Date(at.getTime() + L.surveyTokenTtlMs),
       })}`;
-      await tx`insert into waitlist.events ${tx({
-        name: "signup_confirmed",
-        utm_source: row.utm_source,
-        utm_medium: row.utm_medium,
-        utm_campaign: row.utm_campaign,
-        utm_content: row.utm_content,
-        is_test: row.is_test,
-        occurred_at: at,
-      })}`;
+      // 確認イベントは 1 登録につき初回の確認だけ記録する。配信停止後の再登録・再確認を
+      // 別の登録として数えない（EXPERIMENT_PLAN.md 4.2。Codex 指摘 PR #31）
+      if (!row.first_confirmed_at) {
+        await tx`insert into waitlist.events ${tx({
+          name: "signup_confirmed",
+          utm_source: row.utm_source,
+          utm_medium: row.utm_medium,
+          utm_campaign: row.utm_campaign,
+          utm_content: row.utm_content,
+          is_test: row.is_test,
+          occurred_at: at,
+        })}`;
+      }
       return { status: "confirmed", surveyToken } as const;
     });
   }

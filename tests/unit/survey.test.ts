@@ -22,6 +22,10 @@ describe("任意アンケートの検査", () => {
     expect(parseSurveyAnswers({})).toBeNull();
     expect(parseSurveyAnswers({ free_text: "   ", interests: [] })).toBeNull();
   });
+  it("継承プロパティ名（__proto__・constructor など）を選択肢として受け付けない（Codex 指摘 PR #31）", () => {
+    expect(parseSurveyAnswers({ intent: "__proto__", procrastination: "constructor", photo_acceptance: "toString" })).toBeNull();
+    expect(parseSurveyAnswers({ interests: ["constructor", "__proto__", "hasOwnProperty", "pet"] })).toEqual({ interests: ["pet"] });
+  });
   it("配列で単一選択の質問を偽装できない", () => {
     expect(parseSurveyAnswers({ intent: ["definitely"] })).toBeNull();
   });
