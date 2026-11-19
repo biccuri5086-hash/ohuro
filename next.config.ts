@@ -18,6 +18,8 @@ const nextConfig: NextConfig = {
       { source: "/unsubscribe/:path*", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
       { source: "/confirm", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
       { source: "/unsubscribe", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
+      { source: "/survey", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
+      { source: "/survey/:path*", headers: [{ key: "Referrer-Policy", value: "same-origin" }] },
     ];
   },
 };
