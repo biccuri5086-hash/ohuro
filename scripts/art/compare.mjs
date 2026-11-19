@@ -25,10 +25,12 @@ const git = (...a) => execFileSync("git", a, { cwd: root, encoding: "utf8" }).tr
  * 参照を別のディレクトリ（git worktree）に取り出し、依存を入れてビルドする。
  * node_modules の共有（シンボリックリンク）は Next.js のビルドが拒否するため、参照ごとに npm ci する（npm のキャッシュを使う）。
  */
-function prepareRef(ref, name) {
+function prepareRef(ref, name, cleanup) {
   const dir = join(out, "worktrees", name);
   if (existsSync(dir)) git("worktree", "remove", "--force", dir);
   git("worktree", "add", "--detach", dir, ref);
+  // 作成した直後に後片付けの対象へ登録する（npm ci・ビルドが失敗しても worktree を残さない。Codex 指摘 PR #30）
+  cleanup.push(dir);
   execFileSync("npm", ["ci", "--prefer-offline", "--no-audit", "--no-fund"], { cwd: dir, stdio: "ignore" });
   build(dir);
   return dir;
@@ -106,10 +108,12 @@ async function compose(page, beforeFile, afterFile, title) {
         const diffImg = ctx.createImageData(d.width, d.height);
         for (let i = 0; i < d.mask.length; i++) {
           const o = i * 4;
-          if (d.mask[i]) {
-            diffImg.data.set([214, 48, 49, 255], o);
+          if (d.mask[i] === 1) {
+            diffImg.data.set([214, 48, 49, 255], o); // 変化あり
+          } else if (d.mask[i] === 2) {
+            diffImg.data.set([255, 255, 255, 255], o); // どちらの画像にもない領域
           } else {
-            diffImg.data.set([238, 238, 238, 255], o);
+            diffImg.data.set([238, 238, 238, 255], o); // 変化なし
           }
         }
         ctx.putImageData(diffImg, x, head);
@@ -136,11 +140,9 @@ async function main() {
 
   const worktrees = [];
   try {
-    const baseDir = prepareRef(baseRef, "base");
-    worktrees.push(baseDir);
-    const headDir = headRef ? prepareRef(headRef, "head") : root;
-    if (headRef) worktrees.push(headDir);
-    else build(root);
+    const baseDir = prepareRef(baseRef, "base", worktrees);
+    const headDir = headRef ? prepareRef(headRef, "head", worktrees) : root;
+    if (!headRef) build(root);
 
     const before = await shoot(baseDir, "before");
     const after = await shoot(headDir, "after");

@@ -62,6 +62,31 @@ export async function startServer(cwd, port, timeoutMs = 60_000) {
   throw new Error(`next start が ${timeoutMs}ms 以内に応答しませんでした`);
 }
 
+/** 同一オリジン（または data: / blob:）の URL か */
+export function isInternal(url, origin) {
+  if (/^(data|blob):/.test(url)) return true;
+  try {
+    return new URL(url).origin === origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 同一オリジンの応答がリダイレクトで、転送先が外部なら、その転送先の URL を返す（外部でなければ null）。
+ * 相対の Location は元の URL を基準に解決する。
+ */
+export function externalRedirectTarget(url, origin, status, location) {
+  if (status < 300 || status >= 400 || !location) return null;
+  let target;
+  try {
+    target = new URL(location, url).href;
+  } catch {
+    return location;
+  }
+  return isInternal(target, origin) ? null : target;
+}
+
 const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest("hex");
 
 /** すべての画面幅・区間を撮る */
@@ -80,11 +105,29 @@ export async function captureAll({ baseUrl, outDir, cwd = process.cwd() }) {
         timezoneId: "Asia/Tokyo",
       });
       const external = [];
-      await context.route("**/*", (route) => {
+      const record = (u) => {
+        if (!external.includes(u)) external.push(u);
+      };
+      // 同一オリジン以外への通信は止めて記録する。リダイレクトは自動で追従させず、転送先も検査する
+      // （route のハンドラーは最初の URL にしか呼ばれないため。Codex 指摘 PR #30）
+      await context.route("**/*", async (route) => {
         const u = route.request().url();
-        if (u.startsWith("data:") || u.startsWith("blob:") || new URL(u).origin === origin) return route.continue();
-        external.push(u);
-        return route.abort();
+        if (/^(data|blob):/.test(u)) return route.continue();
+        if (!isInternal(u, origin)) {
+          record(u);
+          return route.abort();
+        }
+        const res = await route.fetch({ maxRedirects: 0 });
+        const ext = externalRedirectTarget(u, origin, res.status(), res.headers()["location"]);
+        if (ext) {
+          record(ext);
+          return route.abort();
+        }
+        return route.fulfill({ response: res });
+      });
+      // 念のため、ブラウザが出したすべてのリクエスト（リダイレクト後を含む）も確認する
+      context.on("request", (req) => {
+        if (!isInternal(req.url(), origin)) record(req.url());
       });
       const page = await context.newPage();
       await page.goto(baseUrl + LP_PATH, { waitUntil: "networkidle" });
