@@ -13,6 +13,10 @@ export const WAITLIST_LIMITS = {
   /** 同じ送信元（IP の鍵付きハッシュ）からの登録リクエスト上限 */
   rateLimitWindowMs: 10 * 60 * 1000,
   rateLimitMaxRequests: 10,
+  /** 計測イベントの送信元ごとの上限（10分あたり） */
+  eventRateLimitMax: 60,
+  /** 任意アンケートのリンクの有効期限 */
+  surveyTokenTtlMs: 7 * 24 * 60 * 60 * 1000,
   /** フォーム表示から送信までの最短時間（これより速い送信は Bot とみなし、保存しない） */
   minFormElapsedMs: 2000,
 } as const;

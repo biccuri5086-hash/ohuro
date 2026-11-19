@@ -1,5 +1,7 @@
 import "server-only";
 import type postgres from "postgres";
+import { isClientEventName, isValidSessionId } from "@/lib/analytics/events";
+import { parseSurveyAnswers, SURVEY_VERSION } from "@/lib/waitlist/survey";
 import { isTestEmail, isValidEmail, normalizeEmail, sanitizeUtm, type Utm } from "@/lib/waitlist/validation";
 import { CONSENT_VERSION, WAITLIST_LIMITS } from "./config";
 import type { EmailSender } from "./email";
@@ -24,7 +26,13 @@ export type RegisterResult =
   | { status: "consent_required" }
   | { status: "rate_limited" };
 
-export type ConfirmResult = { status: "confirmed" | "already_confirmed" | "expired" | "invalid" };
+export type ConfirmResult = {
+  status: "confirmed" | "already_confirmed" | "expired" | "invalid";
+  /** 確認完了時のみ: 任意アンケートの回答用トークン（1回限り） */
+  surveyToken?: string;
+};
+export type SurveyResult = { status: "saved" | "empty" | "expired" | "invalid" };
+export type EventInput = { name: unknown; sessionId: unknown; utm?: unknown; test?: unknown; clientKey: string };
 
 export type UnsubscribeMode = "unsubscribe" | "delete";
 export type UnsubscribeResult = { status: "unsubscribed" | "deleted" | "expired" | "invalid" };
@@ -54,8 +62,9 @@ export function createWaitlistService(deps: WaitlistDeps) {
   const logError = deps.logError ?? ((m: string) => console.error(m));
   const L = WAITLIST_LIMITS;
 
-  async function hitRateLimit(clientKey: string, at: Date): Promise<boolean> {
-    const key = `register:${keyedHash(deps.rateLimitSecret, clientKey)}`;
+  async function hitRateLimit(clientKey: string, at: Date, scope: "register" | "event" = "register"): Promise<boolean> {
+    const key = `${scope}:${keyedHash(deps.rateLimitSecret, clientKey)}`;
+    const max = scope === "event" ? L.eventRateLimitMax : L.rateLimitMaxRequests;
     const windowStart = new Date(Math.floor(at.getTime() / L.rateLimitWindowMs) * L.rateLimitWindowMs);
     const [row] = await deps.sql<{ count: number }[]>`
       insert into waitlist.rate_limits (key, window_start, count) values (${key}, ${windowStart}, 1)
@@ -63,7 +72,7 @@ export function createWaitlistService(deps: WaitlistDeps) {
       returning count`;
     // 古いウィンドウを掃除（1日より前）
     await deps.sql`delete from waitlist.rate_limits where window_start < ${new Date(at.getTime() - 24 * 60 * 60 * 1000)}`;
-    return (row?.count ?? 0) > L.rateLimitMaxRequests;
+    return (row?.count ?? 0) > max;
   }
 
   function canSendConfirmation(row: SignupRow, at: Date): { ok: boolean; resetCount: boolean } {
@@ -222,6 +231,7 @@ export function createWaitlistService(deps: WaitlistDeps) {
           expires_at: Date;
           used_at: Date | null;
           confirmed_at: Date | null;
+          first_confirmed_at: Date | null;
           is_test: boolean;
           utm_source: string | null;
           utm_medium: string | null;
@@ -229,7 +239,7 @@ export function createWaitlistService(deps: WaitlistDeps) {
           utm_content: string | null;
         }[]
       >`
-        select t.signup_id, t.expires_at, t.used_at, s.confirmed_at, s.is_test,
+        select t.signup_id, t.expires_at, t.used_at, s.confirmed_at, s.first_confirmed_at, s.is_test,
                s.utm_source, s.utm_medium, s.utm_campaign, s.utm_content
         from waitlist.tokens t join waitlist.signups s on s.id = t.signup_id
         where t.token_hash = ${hashToken(token)} and t.purpose = 'confirm'
@@ -240,19 +250,31 @@ export function createWaitlistService(deps: WaitlistDeps) {
       await tx`update waitlist.tokens set used_at = ${at} where token_hash = ${hashToken(token)}`;
       await tx`
         update waitlist.signups set
-          confirmed_at = ${at}, unsubscribed_at = null,
+          confirmed_at = ${at}, first_confirmed_at = coalesce(first_confirmed_at, ${at}), unsubscribed_at = null,
           marketing_opt_in = ${marketing}, marketing_opt_in_at = ${marketing ? at : null}
         where id = ${row.signup_id}`;
-      await tx`insert into waitlist.events ${tx({
-        name: "signup_confirmed",
-        utm_source: row.utm_source,
-        utm_medium: row.utm_medium,
-        utm_campaign: row.utm_campaign,
-        utm_content: row.utm_content,
-        is_test: row.is_test,
-        occurred_at: at,
+      const surveyToken = generateToken();
+      await tx`insert into waitlist.tokens ${tx({
+        token_hash: hashToken(surveyToken),
+        signup_id: row.signup_id,
+        purpose: "survey",
+        created_at: at,
+        expires_at: new Date(at.getTime() + L.surveyTokenTtlMs),
       })}`;
-      return { status: "confirmed" } as const;
+      // 確認イベントは 1 登録につき初回の確認だけ記録する。配信停止後の再登録・再確認を
+      // 別の登録として数えない（EXPERIMENT_PLAN.md 4.2。Codex 指摘 PR #31）
+      if (!row.first_confirmed_at) {
+        await tx`insert into waitlist.events ${tx({
+          name: "signup_confirmed",
+          utm_source: row.utm_source,
+          utm_medium: row.utm_medium,
+          utm_campaign: row.utm_campaign,
+          utm_content: row.utm_content,
+          is_test: row.is_test,
+          occurred_at: at,
+        })}`;
+      }
+      return { status: "confirmed", surveyToken } as const;
     });
   }
 
@@ -286,7 +308,43 @@ export function createWaitlistService(deps: WaitlistDeps) {
     });
   }
 
-  return { register, lookupConfirmation, confirm, unsubscribe };
+  /** LP の計測イベント（lp_view / form_view / form_submit）を記録する。個人情報は受け取らない */
+  async function recordEvent(input: EventInput): Promise<{ status: "recorded" | "invalid" | "rate_limited" }> {
+    if (!isClientEventName(input.name) || !isValidSessionId(input.sessionId)) return { status: "invalid" };
+    const at = now();
+    if (await hitRateLimit(input.clientKey, at, "event")) return { status: "rate_limited" };
+    const utm = sanitizeUtm(input.utm);
+    await deps.sql`insert into waitlist.events ${deps.sql({
+      name: input.name,
+      session_id: input.sessionId,
+      ...nullUtm(utm),
+      is_test: input.test === true,
+      occurred_at: at,
+    })}`;
+    return { status: "recorded" };
+  }
+
+  /** 任意アンケートの回答を保存する（トークンは1回限り） */
+  async function submitSurvey(token: unknown, raw: Record<string, unknown>): Promise<SurveyResult> {
+    if (!isWellFormedToken(token)) return { status: "invalid" };
+    const answers = parseSurveyAnswers(raw);
+    const at = now();
+    return deps.sql.begin(async (tx) => {
+      const [row] = await tx<{ signup_id: string; expires_at: Date; used_at: Date | null }[]>`
+        select signup_id, expires_at, used_at from waitlist.tokens
+        where token_hash = ${hashToken(token)} and purpose = 'survey' for update`;
+      if (!row || row.used_at) return { status: "invalid" } as const;
+      if (row.expires_at.getTime() <= at.getTime()) return { status: "expired" } as const;
+      if (!answers) return { status: "empty" } as const;
+      await tx`update waitlist.tokens set used_at = ${at} where token_hash = ${hashToken(token)}`;
+      await tx`
+        update waitlist.signups set survey = ${tx.json(answers)}, survey_version = ${SURVEY_VERSION}, survey_answered_at = ${at}
+        where id = ${row.signup_id}`;
+      return { status: "saved" } as const;
+    });
+  }
+
+  return { register, lookupConfirmation, confirm, unsubscribe, recordEvent, submitSurvey };
 }
 
 function nullUtm(utm: Utm) {
