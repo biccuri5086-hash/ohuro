@@ -43,7 +43,7 @@
 3. Vercel Hobby の商用利用可否、Resend 無料プランの条件、Supabase の料金（Cowork で確認中）
 4. Supabase プロジェクト作成とマイグレーション適用（Claude はプロジェクト作成・適用を権限上できない設定）
 5. Resend の API キー登録（安全な入力フォームで依頼予定）と送信ドメイン
-6. 評価基準の確定（EXPERIMENT_PLAN.md 4.7 の空欄）
+6. 評価基準の確定（EXPERIMENT_PLAN.md 4.7。2026-11-21 に所有者が決定、D-013）
 7. 実機確認（docs/gates/GATE_0_DEVICE_CHECK.md）
 8. ブランチ保護の必須チェックに `db-test`・`e2e` を追加
 9. 送信元 IP の扱い: レート制限は `x-forwarded-for` の先頭を使う。Vercel がこのヘッダーを利用者の値で上書きするか（偽装できないか）は未確認。公開前に Vercel の現行ドキュメントで確認する
