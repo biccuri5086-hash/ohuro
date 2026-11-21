@@ -15,6 +15,7 @@
 | ビルド | `next build` | CI | 稼働 |
 | DB 結合テスト（権限・RLS・制約） | `tests/db/` + 実 PostgreSQL（`npm run test:db`。CI は postgres:17 サービス） | CI（`db-test`）/ ローカル | 稼働（Gate 0 の `waitlist` スキーマ） |
 | E2E | Playwright 等 | CI | **未構築**（Gate 2） |
+| 見た目の比較（スクリーンショット） | `npm run art:compare`（Playwright。変更前後を同じ環境で撮影・画素差分。`docs/art/SCREENSHOTS.md`） | ローカル（CI では差分計算の単体テストのみ） | 稼働（Issue #25） |
 | 実機テスト | iPhone / Android 実機 | 人間 | **未実施**（Gate 1） |
 
 `npm run verify` が CI と同じ検査をローカルで一括実行する。

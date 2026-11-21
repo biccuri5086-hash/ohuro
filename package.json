@@ -19,7 +19,9 @@
     "verify": "npm run typecheck && npm run lint && npm run test && npm run check:secrets && npm run check:policy && npm run check:migrations && npm run build",
     "test:db": "vitest run --config vitest.db.config.mts",
     "ads:render": "node scripts/ads/render-ads.mjs",
-    "report:gate0": "node scripts/report/gate0-report.mjs docs/gates/gate0_ad_metrics.csv"
+    "report:gate0": "node scripts/report/gate0-report.mjs docs/gates/gate0_ad_metrics.csv",
+    "art:shots": "node scripts/art/capture.mjs",
+    "art:compare": "node scripts/art/compare.mjs"
   },
   "dependencies": {
     "next": "16.4.6",
