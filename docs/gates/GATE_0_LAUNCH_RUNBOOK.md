@@ -99,11 +99,11 @@ Claude は手順 1〜5・7 の操作（プロジェクト作成・マイグレ�
 
 ## 4. 広告の準備と配信（手順 6・7）
 
-1. Claude が `scripts/ads/ads.config.mjs` の `LP_URL` を公開 URL に変え、`npm run ads:render` で素材を作り直して PR にする（所有者がマージ）
+1. Claude が `scripts/ads/ads.config.mjs` の `LP_URL` を公開 URL に変え、`npm run ads:render` で素材と `copy.md`（UTM 付きの遷移先 URL）を作り直して PR にする（所有者がマージ）
 2. 所有者が `marketing/ads/README.md` の「配信前チェック」を確認する
 3. Meta 広告マネージャーで、広告 A・B を同じ条件（予算・期間・ターゲット）で入稿する
    - 予算: **A・B 各 5,000 円まで（合計 10,000 円まで）**。キャンペーンの上限（利用上限）を設定する
-   - 遷移先 URL は `marketing/ads/<id>/upload` の URL をそのまま使う（UTM を消さない・書き換えない）
+   - 入稿する素材は `marketing/ads/<id>/upload/`（動画・サムネイル）。遷移先 URL は `marketing/ads/<id>/copy.md` の「遷移先 URL」を広告ごとにそのまま貼る（UTM を消さない・書き換えない。公開 URL だけを入れると広告 A/B を区別できない。Codex 指摘 PR #42）
 4. 配信中の停止の条件（所有者が判断）:
    - 登録 API のエラー、確認メールが届かない、計測が記録されない → すぐに停止して Issue
    - Resend の 1 日 100 通に近づいた → 配信を絞るか、プランの変更を所有者が判断（追加費用は承認が必要）
