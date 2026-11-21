@@ -103,6 +103,11 @@ describe("環境変数", () => {
   it.each(["production", "preview", "development"])("Vercel 上（%s）ではログ出力の仮送信を使えない", (vercelEnv) => {
     expect(() => readWaitlistEnv({ ...goodEnv, VERCEL_ENV: vercelEnv })).toThrow(/ローカル開発専用/);
   });
+  it("outbox（E2E 用）は Vercel 上では使えず、出力先ファイルが必要", () => {
+    expect(() => readWaitlistEnv({ ...goodEnv, EMAIL_PROVIDER: "outbox" })).toThrow(/E2E/);
+    expect(() => readWaitlistEnv({ ...goodEnv, EMAIL_PROVIDER: "outbox", EMAIL_OUTBOX_FILE: "/tmp/x", VERCEL_ENV: "preview" })).toThrow(/E2E/);
+    expect(readWaitlistEnv({ ...goodEnv, EMAIL_PROVIDER: "outbox", EMAIL_OUTBOX_FILE: "/tmp/x" }).emailProvider).toBe("outbox");
+  });
   it("resend には API キーと送信元が必要", () => {
     expect(() => readWaitlistEnv({ ...goodEnv, EMAIL_PROVIDER: "resend" })).toThrow(/RESEND_API_KEY/);
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aggregateSurvey, computeRows, parseAdMetricsCsv, renderReport } from "../../scripts/report/gate0-report.mjs";
+import { aggregateSurvey, compareRates, computeRows, parseAdMetricsCsv, rateProblem, renderReport, wilsonInterval } from "../../scripts/report/gate0-report.mjs";
 
 const funnel = [
   { utm_content: "ad_a_v1", lp_sessions: 200, form_view_sessions: 120, form_submit_sessions: 20, signups_created: 18, signups_confirmed: 10 },
@@ -61,5 +61,47 @@ describe("Gate 0 レポート", () => {
     expect(md).toContain("回答者: 2人");
     expect(md).toContain("登録者全体の意見ではありません");
     expect(md).not.toContain("秘密の本文");
+  });
+});
+
+describe("サンプル数の限界の表示", () => {
+  it("Wilson 区間: 既知の値と一致し、0 件でも区間を返す", () => {
+    const [lo, hi] = wilsonInterval(10, 200);
+    expect(lo).toBeCloseTo(0.0275, 3);
+    expect(hi).toBeCloseTo(0.0896, 3);
+    const [lo0, hi0] = wilsonInterval(0, 20);
+    expect(lo0).toBe(0);
+    expect(hi0).toBeGreaterThan(0.1);
+    expect(wilsonInterval(0, 0)).toBeNull();
+    // Codex 指摘 PR #33: 確認数が訪問数を上回る・非有限値は算出しない（NaN を出さない）
+    expect(wilsonInterval(2, 1)).toBeNull();
+    expect(wilsonInterval(Number.NaN, 10)).toBeNull();
+    expect(wilsonInterval(1, Number.POSITIVE_INFINITY)).toBeNull();
+    expect(rateProblem(2, 1)).toContain("算出不可");
+  });
+  it("小さな差は優劣不明、データがなければ比較しない", () => {
+    expect(compareRates({ utm_content: "ad_a_v1", signups_confirmed: 6, lp_sessions: 100 }, { utm_content: "ad_b_v1", signups_confirmed: 4, lp_sessions: 100 })).toContain("優劣不明");
+    expect(compareRates({ utm_content: "ad_a_v1", signups_confirmed: 60, lp_sessions: 200 }, { utm_content: "ad_b_v1", signups_confirmed: 5, lp_sessions: 200 })).toContain("ad_a_v1 が高い傾向");
+    expect(compareRates({ utm_content: "ad_a_v1", signups_confirmed: 0, lp_sessions: 0 }, { utm_content: "ad_b_v1", signups_confirmed: 1, lp_sessions: 10 })).toContain("データ不足");
+    // 確認数 > 訪問数は「重なる」とは言わず、比較できないと書く
+    const bad = compareRates({ utm_content: "ad_a_v1", signups_confirmed: 2, lp_sessions: 1 }, { utm_content: "ad_b_v1", signups_confirmed: 1, lp_sessions: 10 });
+    expect(bad).toContain("比較できません");
+    expect(bad).toContain("ad_a_v1");
+    expect(bad).not.toContain("重なる");
+  });
+  it("確認数が訪問数を上回る広告は、レポートに NaN を出さず算出不可と書く（Codex 指摘 PR #33）", () => {
+    const rows = computeRows({
+      funnel: [
+        { utm_content: "ad_a_v1", lp_sessions: 1, form_view_sessions: 1, form_submit_sessions: 1, signups_created: 2, signups_confirmed: 2 },
+        { utm_content: "ad_b_v1", lp_sessions: 10, form_view_sessions: 5, form_submit_sessions: 2, signups_created: 1, signups_confirmed: 1 },
+      ],
+      summary: [],
+      adMetrics: [],
+    });
+    expect(rows.find((r) => r.utm_content === "ad_a_v1").registration_rate).toBeNull();
+    const md = renderReport({ rows, survey: aggregateSurvey([]), generatedAt: "t" });
+    expect(md).not.toContain("NaN");
+    expect(md).toContain("ad_a_v1: 確認数が LP 訪問数を上回るため算出不可");
+    expect(md).toContain("比較できません");
   });
 });
