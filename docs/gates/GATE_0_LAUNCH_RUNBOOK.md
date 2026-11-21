@@ -112,7 +112,7 @@ Claude は手順 1〜5・7 の操作（プロジェクト作成・マイグレ�
 ## 5. 集計と判断（手順 8）
 
 1. 所有者が広告マネージャーの数字（表示回数・クリック・広告費）を `docs/gates/gate0_ad_metrics.csv` に入力する（未取得は空欄のまま。推測で埋めない）
-2. `WAITLIST_DATABASE_URL`（本番。読み取りだけ）を手元の環境に設定して `npm run report:gate0` を実行する
+2. 本番データベースの接続文字列を `REPORT_DATABASE_URL` として手元の環境に設定し、`npm run report:gate0` を実行する（スクリプトは読み取り専用のトランザクションで接続する。値はコマンド履歴やチャットに残さない）
 3. 結果を `docs/gates/GATE_0_DEMAND_REPORT_TEMPLATE.md` に沿ってまとめ、Codex に監査を依頼する
 4. 所有者が Gate 0 の判定（合格・要改善・判断保留）を決め、DECISIONS.md に記録する。**AI だけで Gate 1 に進まない**
 
