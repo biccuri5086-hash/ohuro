@@ -20,6 +20,11 @@ describe("素材の検査（Issue #24）", () => {
     expect(lintSvg(svg(`<g transform="translate(2 3) scale(0.5)">${ok}</g><!-- メモ -->`), palette)).toEqual([]);
   });
 
+  it("親の g から継承した塗り・線・太さは有効として扱う", () => {
+    expect(lintSvg(svg('<g fill="#ffd35c" stroke="#5b3f33" stroke-width="3"><circle cx="1" cy="1" r="1"/></g>'), palette)).toEqual([]);
+    expect(lintSvg(svg('<g fill="#123456"><circle cx="1" cy="1" r="1"/></g>'), palette).join()).toContain("パレットにない色");
+  });
+
   it.each([
     ["script", svg('<script>alert(1)</script>'), "script"],
     ["ラスター画像", svg('<image href="x.png" width="10" height="10"/>'), "image"],
@@ -41,6 +46,13 @@ describe("素材の検査（Issue #24）", () => {
     ["viewBox なし", svg(ok, 'xmlns="http://www.w3.org/2000/svg"'), "viewBox"],
     ["xmlns なし", svg(ok, 'viewBox="0 0 48 48"'), "xmlns"],
     ["大きすぎる", svg(`<!-- ${"x".repeat(11000)} -->${ok}`), "大きすぎ"],
+    // Codex 指摘 PR #35: 省略・継承された描画属性（SVG の既定値は fill=黒・stroke-width=1）
+    ["塗りの省略（既定の黒）", svg('<circle cx="24" cy="24" r="20"/>'), "塗りが省略"],
+    ["線の太さの省略（既定の 1）", svg('<path d="M0 0h1" fill="none" stroke="#5b3f33"/>'), "線の太さが省略"],
+    ["g から継承した線で太さがない", svg('<g stroke="#5b3f33"><path d="M0 0h1" fill="none"/></g>'), "線の太さが省略"],
+    // Codex 指摘 PR #35: 閉じタグに属性・自己終了記号
+    ["閉じタグに属性", svg('<circle r="20" fill="#ffffff"></circle r="2">'), "閉じタグ"],
+    ["閉じタグに自己終了記号", svg('<g fill="none"></g/>'), "閉じタグ"],
   ])("%s は拒否する", (_label, text, expected) => {
     const errors = lintSvg(text, palette);
     expect(errors.length).toBeGreaterThan(0);

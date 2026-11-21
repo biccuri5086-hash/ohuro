@@ -2,13 +2,13 @@
   <rect x="2" y="2" width="316" height="176" rx="14" fill="#fff4e4" stroke="#5b3f33" stroke-width="4"/>
   <!-- 壁紙と床 -->
   <rect x="4" y="128" width="312" height="48" rx="10" fill="#e8c39a"/>
-  <path d="M4 128h312" stroke="#5b3f33" stroke-width="3"/>
+  <path d="M4 128h312" fill="none" stroke="#5b3f33" stroke-width="3"/>
   <!-- 窓 -->
   <rect x="28" y="26" width="70" height="56" rx="6" fill="#cfe9f7" stroke="#5b3f33" stroke-width="3"/>
-  <path d="M63 26v56M28 54h70" stroke="#5b3f33" stroke-width="3"/>
+  <path d="M63 26v56M28 54h70" fill="none" stroke="#5b3f33" stroke-width="3"/>
   <!-- 棚 -->
   <rect x="226" y="40" width="70" height="88" rx="6" fill="#d9a877" stroke="#5b3f33" stroke-width="3"/>
-  <path d="M226 70h70M226 100h70" stroke="#5b3f33" stroke-width="3"/>
+  <path d="M226 70h70M226 100h70" fill="none" stroke="#5b3f33" stroke-width="3"/>
   <rect x="236" y="52" width="14" height="18" rx="3" fill="#8cc7a0" stroke="#5b3f33" stroke-width="2"/>
   <circle cx="272" cy="90" r="8" fill="#ffd35c" stroke="#5b3f33" stroke-width="2"/>
   <!-- ソファ -->

@@ -19,6 +19,8 @@
 2. `art/src/<id>.svg` を作る・直す。規格は [DESIGN_GUIDELINES.md](DESIGN_GUIDELINES.md)・[CHARACTER_SPEC.md](CHARACTER_SPEC.md)・[ASSET_SPEC.md](ASSET_SPEC.md)
    - 使える要素: `g`・`path`・`circle`・`ellipse`・`rect`。属性は形・塗り・線（丸端・丸角）・`opacity`・`transform`（translate / scale / rotate）だけ
    - 色は `art/palette.json` の色か `none`。線の太さも同ファイルの値だけ
+   - 図形ごとに塗り（`fill`）を必ず書く（親の `g` からの継承でもよい）。線（`stroke`）を使うなら太さ（`stroke-width`）も書く。省略すると SVG の既定値（黒い塗り・太さ 1）で描かれるため、検査で拒否される。線だけの図形は `fill="none"`
+   - 閉じタグに属性や `/` は書かない（XML として不正なため拒否される）
    - 使えないもの: ラスター画像、外部参照（`href`・`url()`・`data:`）、`script`・`style`・`foreignObject`、グラデーション・フィルター（立体的な表現）、文字
    - ベクター編集ソフトで描いた場合も、書き出した SVG を上の形に整える（不要な属性・メタデータを消す）
 3. 新しい素材なら `art/ASSETS.json` に記録を足す。必須欄: `id`・`file`・`component`・`defaultTitle`・`kind`・`author`・`method`・`references`・`createdAt`・`license`・`commercialUse`・`sha256`
@@ -32,7 +34,7 @@
   - すべての素材が検査に合格する
   - すべての素材が台帳にあり、台帳の sha256 がファイルと一致する
   - 生成ファイルが最新（生成を忘れると失敗）
-  - 違反する SVG（script・ラスター画像・外部参照・パレット外の色・グラデーション等 20 種）が拒否される
+  - 違反する SVG（script・ラスター画像・外部参照・パレット外の色・グラデーション・塗りや線の太さの省略・不正な閉じタグ等 25 種）が拒否される
 - `npm run art:build -- --check` でも同じ確認ができる（書き換えない）
 
 ## 画像生成ツールについて

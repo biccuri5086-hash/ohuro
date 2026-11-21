@@ -37,6 +37,11 @@ export function parseSvg(text) {
       continue;
     }
     if (closing) {
+      // 閉じタグに属性・自己終了記号は書けない（XML として不正。Codex 指摘 PR #35）
+      if (rawAttrs.trim() || selfClose) {
+        errors.push(`閉じタグ </${name}> に属性や「/」は書けません`);
+        break;
+      }
       const open = stack.pop();
       if (!open || open.name !== name) {
         errors.push(`閉じタグ </${name}> が対応していません`);
@@ -90,6 +95,24 @@ export function lintSvg(text, palette) {
   if (!/^0 0 \d+ \d+$/.test(root.attrs.viewBox ?? "")) errors.push('svg に viewBox="0 0 幅 高さ"（整数）が必要です');
   const colors = new Set(Object.keys(palette.colors));
   const widths = new Set(palette.strokeWidths.map(String));
+  // 実効的な塗り・線（親からの継承と SVG の既定値を含む）を検査する。既定値は fill=黒・stroke=none・stroke-width=1
+  // 省略すると既定の黒や太さ 1 で描かれるため、図形ごとに実際に使われる値がパレット・許可値に入るかを見る（Codex 指摘 PR #35）
+  const SHAPES = new Set(["path", "circle", "ellipse", "rect"]);
+  const checkEffective = (node, inherited) => {
+    const eff = {
+      fill: node.attrs.fill ?? inherited.fill,
+      stroke: node.attrs.stroke ?? inherited.stroke,
+      "stroke-width": node.attrs["stroke-width"] ?? inherited["stroke-width"],
+    };
+    if (SHAPES.has(node.name)) {
+      if (eff.fill === undefined) errors.push(`<${node.name}> の塗りが省略されています（既定の黒になる）。fill に色か "none" を書いてください`);
+      if (eff.stroke !== undefined && eff.stroke !== "none" && eff["stroke-width"] === undefined) {
+        errors.push(`<${node.name}> の線の太さが省略されています（既定の 1 になる）。stroke-width を書いてください`);
+      }
+    }
+    for (const c of node.children) checkEffective(c, eff);
+  };
+
   const visit = (node, depth) => {
     const allowed = ELEMENTS[node.name];
     if (!allowed || (node.name === "svg" && depth > 0)) {
@@ -114,5 +137,6 @@ export function lintSvg(text, palette) {
     for (const c of node.children) visit(c, depth + 1);
   };
   visit(root, 0);
+  checkEffective(root, {});
   return errors;
 }
