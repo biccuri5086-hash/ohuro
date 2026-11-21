@@ -154,15 +154,48 @@ test.describe("データ保護と計測（G0-1 / G0-5）", () => {
     expect(cross.status()).toBe(403);
   });
 
-  test("広告 A / B の流入を区別して数え、テスト流入は除外する", async ({ page, context }) => {
-    await page.goto("/?utm_source=instagram&utm_medium=paid_social&utm_campaign=gate0&utm_content=ad_b_v1");
-    await page.waitForTimeout(500);
-    const p2 = await context.newPage();
-    await p2.goto("/?utm_content=ad_b_v1&ohuro_test=1");
-    await p2.waitForTimeout(500);
-    const rows = await db()`select utm_content, is_test from waitlist.events where name = 'lp_view' and utm_content = 'ad_b_v1'`;
-    expect(rows.some((r) => !r.is_test)).toBe(true);
-    expect(rows.some((r) => r.is_test)).toBe(true);
+  test("広告 A / B の流入を区別して数え、テスト流入・テスト登録は集計から除外する", async ({ page, context }, info) => {
+    // Codex 指摘 PR #33: 生のイベントではなく、集計ビュー（funnel_by_creative・signup_summary_by_creative）の値を確かめる。
+    // 並行して動く他のテストと混ざらないよう、この実行だけの utm_content を使う
+    const base = `e2e_${info.project.name.replace(/[^a-z0-9]/gi, "")}_${Date.now()}`;
+    const adA = `${base}_a`;
+    const adB = `${base}_b`;
+    const lp = (ad: string, extra = "") => `/?utm_source=instagram&utm_medium=paid_social&utm_campaign=gate0&utm_content=${ad}${extra}`;
+
+    // 通常の流入: A と B に 1 回ずつ。A から通常の登録 → 確認
+    const email = uniqueEmail("ab", info.project.name);
+    await page.goto(lp(adA));
+    await submitSignup(page, email);
+    await page.goto((await waitForEmail(email)).confirmUrl);
+    await page.getByRole("button", { name: "登録を確認する" }).click();
+    await expect(page.locator("h1")).toHaveText("事前登録が完了しました");
+    const pB = await context.newPage();
+    await pB.goto(lp(adB));
+
+    // テスト流入: A へのテスト訪問（?ohuro_test=1）と、B からのテスト用アドレス（+ohuro-test）での登録 → 確認。
+    // 試験する人は LP を ?ohuro_test=1 付きで開く運用（EXPERIMENT_PLAN.md 4.4）。付けずに開いた訪問は通常の訪問として数えられる
+    const pTest = await context.newPage();
+    await pTest.goto(lp(adA, "&ohuro_test=1"));
+    const testEmail = uniqueEmail("abtest", info.project.name).replace("@", "+ohuro-test@");
+    const pTestSignup = await context.newPage();
+    await pTestSignup.goto(lp(adB, "&ohuro_test=1"));
+    await submitSignup(pTestSignup, testEmail);
+    await pTestSignup.goto((await waitForEmail(testEmail)).confirmUrl);
+    await pTestSignup.getByRole("button", { name: "登録を確認する" }).click();
+    await expect(pTestSignup.locator("h1")).toHaveText("事前登録が完了しました");
+
+    const funnel = async (ad: string) => {
+      const [r] = await db()`select lp_sessions, signups_created, signups_confirmed from waitlist.funnel_by_creative where utm_content = ${ad}`;
+      return r ? [Number(r.lp_sessions), Number(r.signups_created), Number(r.signups_confirmed)] : [0, 0, 0];
+    };
+    // A: 通常の訪問 1・登録 1・確認 1（テスト訪問は数えない）。B: 通常の訪問 1（テスト登録は数えない）
+    await expect.poll(() => funnel(adA)).toEqual([1, 1, 1]);
+    await expect.poll(() => funnel(adB)).toEqual([1, 0, 0]);
+    const summary = await db()`select utm_content, signups_total, signups_confirmed from waitlist.signup_summary_by_creative where utm_content in (${adA}, ${adB})`;
+    expect(summary.map((r) => [r.utm_content, Number(r.signups_total), Number(r.signups_confirmed)])).toEqual([[adA, 1, 1]]);
+    // 生のデータには、テストの記録も残っている（除外は集計の側で行う）
+    const raw = await db()`select count(*)::int as n from waitlist.events where utm_content in (${adA}, ${adB}) and is_test`;
+    expect(raw[0]!.n).toBeGreaterThan(0);
   });
 
   test("サーバーのログにメールアドレス・トークン・接続文字列が出ていない", async () => {

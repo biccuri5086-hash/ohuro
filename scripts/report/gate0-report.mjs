@@ -37,9 +37,22 @@ const pct = (v) => (v === null ? NA : `${(v * 100).toFixed(1)}%`);
 const yen = (v) => (v === null ? NA : `${Math.round(v).toLocaleString("ja-JP")}円`);
 const int = (v) => (v === null || v === undefined ? NA : String(v));
 
-/** 割合の 95% 信頼区間（Wilson 法）。n=0 は null */
+/**
+ * 割合を計算できる入力かを調べる。計算できなければ理由を返す（できれば null）。
+ * 確認数が訪問数を上回ることがある（LP の計測がブロックされた、同じタブから複数のアドレスで登録した等）ため、
+ * その場合は区間を算出しない（Codex 指摘 PR #33）。
+ */
+export function rateProblem(successes, n) {
+  if (n === null || n === undefined || successes === null || successes === undefined) return "データ不足";
+  if (!Number.isFinite(n) || !Number.isFinite(successes) || n < 0 || successes < 0) return "値が不正";
+  if (n === 0) return "データ不足";
+  if (successes > n) return "確認数が LP 訪問数を上回るため算出不可（計測漏れ・同じタブでの複数登録の可能性）";
+  return null;
+}
+
+/** 割合の 95% 信頼区間（Wilson 法）。計算できない入力（n=0、確認数 > 訪問数、非有限値など）は null */
 export function wilsonInterval(successes, n, z = 1.96) {
-  if (n === null || successes === null || n <= 0) return null;
+  if (rateProblem(successes, n)) return null;
   const p = successes / n;
   const denom = 1 + (z * z) / n;
   const center = (p + (z * z) / (2 * n)) / denom;
@@ -52,9 +65,14 @@ export function wilsonInterval(successes, n, z = 1.96) {
  * 統計的検定の代わりではなく、少数サンプルで差を断定しないための目安。
  */
 export function compareRates(a, b) {
+  const pa = rateProblem(a.signups_confirmed, a.lp_sessions);
+  const pb = rateProblem(b.signups_confirmed, b.lp_sessions);
+  if (pa || pb) {
+    const reasons = [pa && `${a.utm_content}: ${pa}`, pb && `${b.utm_content}: ${pb}`].filter(Boolean).join("／");
+    return `比較できません（${reasons}）`;
+  }
   const ia = wilsonInterval(a.signups_confirmed, a.lp_sessions);
   const ib = wilsonInterval(b.signups_confirmed, b.lp_sessions);
-  if (!ia || !ib) return "データ不足（比較できません）";
   if (ia[0] > ib[1]) return `${a.utm_content} が高い傾向（区間が重ならない。ただし少額テストのため確定ではない）`;
   if (ib[0] > ia[1]) return `${b.utm_content} が高い傾向（区間が重ならない。ただし少額テストのため確定ではない）`;
   return "優劣不明（信頼区間が重なる）";
@@ -85,7 +103,7 @@ export function computeRows({ funnel, summary, adMetrics }) {
       signups_created: f ? Number(f.signups_created) : null,
       signups_confirmed: confirmed,
       signups_confirmed_active: s ? Number(s.signups_confirmed_active) : null,
-      registration_rate: ratio(confirmed, lp),
+      registration_rate: rateProblem(confirmed, lp) ? null : ratio(confirmed, lp),
       registration_rate_ci: wilsonInterval(confirmed, lp),
       cost_per_confirmed: ratio(spend, confirmed),
     };
@@ -135,7 +153,11 @@ export function renderReport({ rows, survey, generatedAt }) {
     "",
     "### 登録率の幅（95% 信頼区間・Wilson 法）",
     "",
-    ...rows.map((r) => `- ${r.utm_content}: ${r.registration_rate_ci ? `${pct(r.registration_rate_ci[0])}〜${pct(r.registration_rate_ci[1])}（LP訪問 ${r.lp_sessions}）` : NA}`),
+    ...rows.map((r) => {
+      const problem = rateProblem(r.signups_confirmed, r.lp_sessions);
+      if (problem) return `- ${r.utm_content}: ${problem === "データ不足" ? NA : problem}`;
+      return `- ${r.utm_content}: ${pct(r.registration_rate_ci[0])}〜${pct(r.registration_rate_ci[1])}（LP訪問 ${r.lp_sessions}）`;
+    }),
     "",
     `- 広告 A / B の比較: ${(() => {
       const a = rows.find((r) => r.utm_content === "ad_a_v1");
