@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- 湯気 -->
+  <path d="M44 22c-6-6 2-12-2-18M62 18c-5-6 3-11-1-17M80 22c-6-6 2-12-2-18" stroke="#b9d9ec" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- 体 -->
+  <path d="M20 82c0-26 18-44 40-44s40 18 40 44c0 16-14 24-40 24S20 98 20 82z" fill="#ffd6bf" stroke="#5b3f33" stroke-width="4" stroke-linejoin="round"/>
+  <!-- タオル -->
+  <path d="M36 46c8-10 40-10 48 0l-4 8c-10-6-30-6-40 0z" fill="#ffffff" stroke="#5b3f33" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M42 46h36" fill="none" stroke="#6fb3dd" stroke-width="3" stroke-linecap="round"/>
+  <!-- 顔 -->
+  <circle cx="47" cy="74" r="4.5" fill="#5b3f33"/>
+  <circle cx="73" cy="74" r="4.5" fill="#5b3f33"/>
+  <circle cx="45" cy="72.5" r="1.4" fill="#ffffff"/>
+  <circle cx="71" cy="72.5" r="1.4" fill="#ffffff"/>
+  <ellipse cx="38" cy="84" rx="6" ry="3.5" fill="#ffab9a"/>
+  <ellipse cx="82" cy="84" rx="6" ry="3.5" fill="#ffab9a"/>
+  <path d="M55 84q5 5 10 0" stroke="#5b3f33" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

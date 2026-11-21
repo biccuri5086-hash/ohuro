@@ -20,6 +20,7 @@
     "test:db": "vitest run --config vitest.db.config.mts",
     "ads:render": "node scripts/ads/render-ads.mjs",
     "report:gate0": "node scripts/report/gate0-report.mjs docs/gates/gate0_ad_metrics.csv",
+    "art:build": "node scripts/art/build-art.mjs",
     "art:shots": "node scripts/art/capture.mjs",
     "art:compare": "node scripts/art/compare.mjs"
   },

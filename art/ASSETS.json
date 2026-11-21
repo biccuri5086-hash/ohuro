@@ -1,0 +1,85 @@
+{
+  "note": "素材台帳（Issue #24）。素材ごとの出所・制作方法・ライセンス・商用利用の可否を記録する。ライセンスと商用利用の欄は所有者が確認して確定する",
+  "assets": [
+    {
+      "id": "pet",
+      "file": "art/src/pet.svg",
+      "component": "PetIllustration",
+      "defaultTitle": "ペットのイメージ（開発中のコンセプト）",
+      "kind": "character",
+      "author": "おふろクエスト開発（所有者の指示により Claude Code が SVG コードとして作成）",
+      "method": "手書きの SVG コード。画像生成 AI・外部素材・トレースは不使用",
+      "references": "なし（作成時の記録による。既存作品を参考にした場合はここに記録する）",
+      "createdAt": "2026-11-18",
+      "license": "未定（所有者が決定）",
+      "commercialUse": "所有者の確認待ち（自作素材として扱う予定。権利関係の判断は所有者が行い、AI は法的適合を保証しない）",
+      "sha256": "a4976f36ff431bc9af6137763e69baa927abf83b5e147a4399f28cfd41d9257f"
+    },
+    {
+      "id": "room",
+      "file": "art/src/room.svg",
+      "component": "RoomIllustration",
+      "defaultTitle": "2Dマイホームのイメージ（開発中のコンセプト）",
+      "kind": "background",
+      "author": "おふろクエスト開発（所有者の指示により Claude Code が SVG コードとして作成）",
+      "method": "手書きの SVG コード。画像生成 AI・外部素材・トレースは不使用",
+      "references": "なし（作成時の記録による。既存作品を参考にした場合はここに記録する）",
+      "createdAt": "2026-11-18",
+      "license": "未定（所有者が決定）",
+      "commercialUse": "所有者の確認待ち（自作素材として扱う予定。権利関係の判断は所有者が行い、AI は法的適合を保証しない）",
+      "sha256": "42e2efb37917a9d2d90f149ba9c05b091d7d5bee583cd58181bde8e92573791a"
+    },
+    {
+      "id": "coin",
+      "file": "art/src/coin.svg",
+      "component": "CoinIcon",
+      "defaultTitle": "コイン",
+      "kind": "icon",
+      "author": "おふろクエスト開発（所有者の指示により Claude Code が SVG コードとして作成）",
+      "method": "手書きの SVG コード。画像生成 AI・外部素材・トレースは不使用",
+      "references": "なし（作成時の記録による。既存作品を参考にした場合はここに記録する）",
+      "createdAt": "2026-11-18",
+      "license": "未定（所有者が決定）",
+      "commercialUse": "所有者の確認待ち（自作素材として扱う予定。権利関係の判断は所有者が行い、AI は法的適合を保証しない）",
+      "sha256": "04a6818d30dbf12321f281c2f1b50dd53695ec8446de301ec328f260a38947d7"
+    },
+    {
+      "id": "towel",
+      "file": "art/src/towel.svg",
+      "component": "TowelIcon",
+      "defaultTitle": "タオル",
+      "kind": "icon",
+      "author": "おふろクエスト開発（所有者の指示により Claude Code が SVG コードとして作成）",
+      "method": "手書きの SVG コード。画像生成 AI・外部素材・トレースは不使用",
+      "references": "なし（作成時の記録による。既存作品を参考にした場合はここに記録する）",
+      "createdAt": "2026-11-18",
+      "license": "未定（所有者が決定）",
+      "commercialUse": "所有者の確認待ち（自作素材として扱う予定。権利関係の判断は所有者が行い、AI は法的適合を保証しない）",
+      "sha256": "f68b180f513058307f7404292cf4382f9c5878b09539f8eaffa7a2daa26a6efe"
+    },
+    {
+      "id": "phone",
+      "file": "art/src/phone.svg",
+      "component": "PhoneIcon",
+      "defaultTitle": "スマートフォン",
+      "kind": "icon",
+      "author": "おふろクエスト開発（所有者の指示により Claude Code が SVG コードとして作成）",
+      "method": "手書きの SVG コード。画像生成 AI・外部素材・トレースは不使用",
+      "references": "なし（作成時の記録による。既存作品を参考にした場合はここに記録する）",
+      "createdAt": "2026-11-18",
+      "license": "未定（所有者が決定）",
+      "commercialUse": "所有者の確認待ち（自作素材として扱う予定。権利関係の判断は所有者が行い、AI は法的適合を保証しない）",
+      "sha256": "a3757119e87b5f90c1d0c0354fc9d77c682259751aee6788049e1f5e35151a66"
+    }
+  ],
+  "fonts": [
+    {
+      "name": "IPAGothic（IPA ゴシック）",
+      "usedIn": "scripts/ads/render-ads.mjs（広告の動画・画像の文字）",
+      "source": "Debian パッケージ fonts-ipafont-gothic（環境に入っているもの）",
+      "license": "IPA フォントライセンス v1.0 と表記されている（条文は所有者が確認）",
+      "commercialUse": "所有者の確認待ち"
+    }
+  ],
+  "notInLedger": "LP の文字はシステムフォント（端末のフォント）で表示し、フォントファイルを配布しない。広告の場面だけにある図形（コイン・ガチャ・家具の描画）は scripts/ads/render-ads.mjs 内の自作 SVG で、正本への移行は Issue #27"
+}
