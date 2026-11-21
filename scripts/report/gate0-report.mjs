@@ -212,7 +212,11 @@ export function evaluateGate0({ rows, stats, criteria = GATE0_CRITERIA }) {
   add("登録機能と計測に重大な不具合がない", "不具合なし", "—", "所有者が確認");
 
   const hold = [];
-  if (spendMissing) hold.push("広告費が未取得");
+  // 必須の指標が判定不可なら合格・要改善の候補にしない（所有者が確認する項目は除く。Codex 指摘 PR #44）。
+  // 有効回答の不足は下の専用の理由で示す
+  for (const c of checks) {
+    if (c.required && c.status.startsWith("判定不可") && !c.status.includes("有効回答が不足")) hold.push(`${c.label}が${c.status}`);
+  }
   if (validMin < criteria.minValidResponses) hold.push(`アンケートの有効回答が ${criteria.minValidResponses}人未満`);
   if (lpProblem) hold.push(`LP 訪問の計測が不十分（${lpProblem}）`);
   const mismatch = confirmationMismatch(rows);

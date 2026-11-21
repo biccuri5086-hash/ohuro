@@ -123,6 +123,24 @@ describe("判定の候補（下書き）", () => {
     expect(ev.checks.find((c) => c.label === "確認済み登録単価").status).toContain("判定不可");
   });
 
+  it("必須の指標が判定不可（広告費 0 円で広告経由の確認 0 人）なら、他の流入で人数を満たしても判断保留（Codex 指摘 PR #44）", () => {
+    const rows = computeRows({
+      funnel: [
+        { utm_content: "ad_a_v1", lp_sessions: 10, form_view_sessions: 0, form_submit_sessions: 0, signups_created: 0, signups_confirmed: 0 },
+        { utm_content: "ad_b_v1", lp_sessions: 10, form_view_sessions: 0, form_submit_sessions: 0, signups_created: 0, signups_confirmed: 0 },
+        { utm_content: "(none)", lp_sessions: 200, form_view_sessions: 0, form_submit_sessions: 0, signups_created: 20, signups_confirmed: 20 },
+      ],
+      summary: [],
+      adMetrics: [
+        { utm_content: "ad_a_v1", spend: 0, impressions: 0, clicks: 0 },
+        { utm_content: "ad_b_v1", spend: 0, impressions: 0, clicks: 0 },
+      ],
+    });
+    const ev = evaluateGate0({ rows, stats: surveyStats(goodSurvey) });
+    expect(ev.checks.find((c) => c.label === "確認済み登録単価").status).toBe("判定不可（広告費 0円）");
+    expect(ev.candidate).toBe("判断保留の候補（確認済み登録単価が判定不可（広告費 0円））");
+  });
+
   it("有効回答が 10 人未満なら判断保留", () => {
     const ev = evaluateGate0({ rows: adRows(), stats: surveyStats(many(9, "daily", "yes")) });
     expect(ev.candidate).toContain("判断保留の候補");
