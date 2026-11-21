@@ -101,5 +101,5 @@
 | OPEN-3 | コイン・ガチャ・初期アイテム・排出率の確定値 | Gate 3 着手前 |
 | OPEN-4 | 重複アイテム救済の方式 | Gate 3 着手前 |
 | OPEN-5 | 価格・決済事業者・課金条件 | Gate 5 |
-| OPEN-6 | 開発・運営の月額予算 | 有料サービス導入前（COST_POLICY.md） |
-| OPEN-7 | ホスティング先（Vercel 等）と本番/開発環境の分離方法 | Gate 0 の公開前 |
+| OPEN-6 | 開発・運営の月額予算 | 有料サービス導入前（COST_POLICY.md）。Gate 0 の予算は決定（D-013） |
+| OPEN-7 | ホスティング先（Vercel 等）と本番/開発環境の分離方法 | Gate 0 の公開前。ホスティングは Vercel Pro、DB は Supabase Pro に決定（D-013）。分離の手順は docs/gates/GATE_0_LAUNCH_RUNBOOK.md |
