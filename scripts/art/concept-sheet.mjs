@@ -12,7 +12,9 @@ import { lintSvg } from "./svg-lint.mjs";
 export function loadConcepts(root, name) {
   const dir = join(root, "art/concepts", name);
   const meta = JSON.parse(readFileSync(join(dir, "concepts.json"), "utf8"));
-  const palette = JSON.parse(readFileSync(join(root, "art/palette.json"), "utf8"));
+  const base = JSON.parse(readFileSync(join(root, "art/palette.json"), "utf8"));
+  // 案の段階だけで使う色（concepts.json の paletteExtra）。本番のパレットは変えない
+  const palette = { ...base, colors: { ...base.colors, ...(meta.paletteExtra?.colors ?? {}) } };
   const errors = [];
   const files = new Set(readdirSync(dir).filter((f) => f.endsWith(".svg")));
   const rows = meta.concepts.map((c) => ({

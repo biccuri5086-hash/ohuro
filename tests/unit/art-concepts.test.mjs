@@ -11,8 +11,8 @@ describe("お湯わらしのデザイン案（Issue #52）", () => {
     expect(data.errors).toEqual([]);
   });
 
-  it("3 案、それぞれ 2 段階以上の成長がある", () => {
-    expect(data.rows).toHaveLength(3);
+  it("4 案（参考イラストの方向の案D を含む）、それぞれ 2 段階以上の成長がある", () => {
+    expect(data.rows).toHaveLength(4);
     for (const c of data.rows) expect(c.stages.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -27,6 +27,11 @@ describe("お湯わらしのデザイン案（Issue #52）", () => {
     for (const f of ["src/components/art/generated.tsx", "scripts/ads/art.generated.mjs", "art/ASSETS.json"]) {
       expect(readFileSync(f, "utf8")).not.toContain("concepts/oyuwarashi");
     }
+  });
+
+  it("案D の色は案の段階だけで足し、本番のパレットには入れていない", () => {
+    const base = JSON.parse(readFileSync("art/palette.json", "utf8"));
+    for (const c of Object.keys(data.meta.paletteExtra.colors)) expect(base.colors[c]).toBeUndefined();
   });
 
   it("比較シートは外部の読み込みをせず、現行のペットと並べる", () => {

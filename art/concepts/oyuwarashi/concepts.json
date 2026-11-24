@@ -1,6 +1,6 @@
 {
   "title": "お湯わらし デザイン案（承認前の案・Issue #52）",
-  "note": "開発中のコンセプトです。承認前のため、LP・広告・アプリには使っていません。色と線は現行のパレットの範囲だけを使っています。",
+  "note": "開発中のコンセプトです。承認前のため、LP・広告・アプリには使っていません。案A〜C は現行のパレットだけ、案D は所有者の参考イラストの方向（透明感のある水の精霊）に合わせて水の色を足しています。",
   "status": "案（所有者の承認待ち）",
   "compareWith": "art/src/pet.svg",
   "provenance": {
@@ -17,8 +17,14 @@
       "description": "湯気でできた体の精。頭の湯気の房が、育つと 3 つの冠になる。現行のタオルを、成体のマントとして残す",
       "keepsCore": "湯気とタオルを残す（現行のペットに最も近い）",
       "stages": [
-        { "file": "a1-yuge-young.svg", "label": "幼体" },
-        { "file": "a2-yuge-adult.svg", "label": "成体" }
+        {
+          "file": "a1-yuge-young.svg",
+          "label": "幼体"
+        },
+        {
+          "file": "a2-yuge-adult.svg",
+          "label": "成体"
+        }
       ]
     },
     {
@@ -27,8 +33,14 @@
       "description": "泡のまるい体の精。育つと泡の冠とミント色のひれが付く。軽くて明るい印象",
       "keepsCore": "湯気・タオルの代わりに泡を核にする（作り替え）",
       "stages": [
-        { "file": "b1-awa-young.svg", "label": "幼体" },
-        { "file": "b2-awa-adult.svg", "label": "成体" }
+        {
+          "file": "b1-awa-young.svg",
+          "label": "幼体"
+        },
+        {
+          "file": "b2-awa-adult.svg",
+          "label": "成体"
+        }
       ]
     },
     {
@@ -37,9 +49,43 @@
       "description": "湯おけに住む精。幼体は桶から顔を出し、成体は桶のかぶと・タオルのはちまき・ひしゃくの杖で冒険する。バトルの役割と合わせやすい",
       "keepsCore": "体の色と湯気・タオルを残し、湯おけと若葉を加える",
       "stages": [
-        { "file": "c1-oke-young.svg", "label": "幼体" },
-        { "file": "c2-oke-adult.svg", "label": "成体" }
+        {
+          "file": "c1-oke-young.svg",
+          "label": "幼体"
+        },
+        {
+          "file": "c2-oke-adult.svg",
+          "label": "成体"
+        }
+      ]
+    },
+    {
+      "id": "d",
+      "title": "案D 水の子",
+      "description": "所有者の参考イラストの方向（透明感のある水の精霊）。しずく形の体に湯気の房、ゆず湯の柚子の飾り、水のフリルの衣としずくの宝石。半透明を重ねて、つやと透明感を出す",
+      "keepsCore": "湯気の房とほっぺを残し、柚子（ゆず湯）でお風呂らしさを足す。輪郭線は茶色から青に変える（規格の変更が必要）",
+      "stages": [
+        {
+          "file": "d1-mizu-young.svg",
+          "label": "幼体"
+        },
+        {
+          "file": "d2-mizu-adult.svg",
+          "label": "成体"
+        }
       ]
     }
-  ]
+  ],
+  "paletteExtra": {
+    "note": "案D（水の子）のためだけに、案の段階で足した色。本番のパレット（art/palette.json）には入れていない。採用されたら #51 で決める",
+    "colors": {
+      "#cfe3fb": "水の体",
+      "#a9cdf5": "水の影・フリル",
+      "#7fb3ef": "しずく",
+      "#4a6cc0": "水の輪郭線",
+      "#2f4a8f": "目・口の線",
+      "#f1e3c3": "貝の飾り",
+      "#d9b46a": "金の縁"
+    }
+  }
 }
