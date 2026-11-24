@@ -9,19 +9,36 @@
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const RETENTION = Object.freeze({
-  /** 確認されなかった登録: 最後の登録（同意）から */
+  /** 確認されなかった登録: 最後の登録（同意）から（日数） */
   unconfirmedDays: 30,
-  /** 配信停止した登録: 停止から */
-  unsubscribedDays: 365,
-  /** 確認済みの登録（停止していない）: 最初の登録から */
-  confirmedDays: 730,
-  /** 計測イベント: Gate 0 の判断日から（判断日より前のイベントが対象） */
-  eventsAfterDecisionDays: 365,
-  /** レート制限用の値 */
+  /** 配信停止した登録: 停止から（年。暦の応当日で数える） */
+  unsubscribedYears: 1,
+  /** 確認済みの登録（停止していない）: 最初の登録から（年） */
+  confirmedYears: 2,
+  /** 計測イベント: Gate 0 の判断から（年）。判断後に記録されたものは記録から（年） */
+  eventsYears: 1,
+  /** レート制限用の値（日数） */
   rateLimitDays: 1,
 });
 
-const before = (/** @type {Date} */ now, /** @type {number} */ days) => new Date(now.getTime() - days * DAY_MS);
+/** 入力（日付）の誤り。文面は固定で、入力値を含まない */
+export class RetentionInputError extends Error {}
+
+const daysBefore = (/** @type {Date} */ now, /** @type {number} */ days) => new Date(now.getTime() - days * DAY_MS);
+
+/**
+ * n 年前の同じ月日・時刻（UTC）。2 月 29 日の応当日がない年は 2 月 28 日にする
+ * （境界を早めにして、期限前のデータを消さないため。Codex 指摘 PR #46）
+ * @param {Date} d
+ * @param {number} years
+ */
+export function yearsBefore(d, years) {
+  const y = d.getUTCFullYear() - years;
+  const m = d.getUTCMonth();
+  const lastDay = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const day = Math.min(d.getUTCDate(), lastDay);
+  return new Date(Date.UTC(y, m, day, d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds(), d.getUTCMilliseconds()));
+}
 
 /**
  * 期限の境界を計算する。gate0DecidedAt が未指定なら計測イベントは対象外（null）
@@ -29,20 +46,22 @@ const before = (/** @type {Date} */ now, /** @type {number} */ days) => new Date
  * @param {Date | null} [gate0DecidedAt]
  */
 export function cutoffs(now, gate0DecidedAt = null) {
-  if (!(now instanceof Date) || Number.isNaN(now.getTime())) throw new Error("now が不正です");
+  if (!(now instanceof Date) || Number.isNaN(now.getTime())) throw new RetentionInputError("現在時刻が不正です");
+  const yearAgo = yearsBefore(now, RETENTION.eventsYears);
   /** @type {Date | null} */
   let eventsBefore = null;
   if (gate0DecidedAt !== null && gate0DecidedAt !== undefined) {
-    if (!(gate0DecidedAt instanceof Date) || Number.isNaN(gate0DecidedAt.getTime())) throw new Error("Gate 0 の判断日が不正です");
-    if (gate0DecidedAt.getTime() > now.getTime()) throw new Error("Gate 0 の判断日が未来です");
-    // 判断から 1 年たった後に、判断日より前のイベントを削除する
-    if (now.getTime() >= gate0DecidedAt.getTime() + RETENTION.eventsAfterDecisionDays * DAY_MS) eventsBefore = gate0DecidedAt;
+    if (!(gate0DecidedAt instanceof Date) || Number.isNaN(gate0DecidedAt.getTime())) throw new RetentionInputError("Gate 0 の判断日が不正です");
+    if (gate0DecidedAt.getTime() > now.getTime()) throw new RetentionInputError("Gate 0 の判断日が未来です");
+    // 判断から 1 年たった後は、記録から 1 年を過ぎたイベントを削除する。
+    // 判断より前のイベントはすべて対象になり、判断後に記録されたイベントも記録から 1 年で消える（Codex 指摘 PR #46）
+    if (gate0DecidedAt.getTime() <= yearAgo.getTime()) eventsBefore = yearAgo;
   }
   return {
-    unconfirmedBefore: before(now, RETENTION.unconfirmedDays),
-    unsubscribedBefore: before(now, RETENTION.unsubscribedDays),
-    confirmedBefore: before(now, RETENTION.confirmedDays),
-    rateLimitBefore: before(now, RETENTION.rateLimitDays),
+    unconfirmedBefore: daysBefore(now, RETENTION.unconfirmedDays),
+    unsubscribedBefore: yearsBefore(now, RETENTION.unsubscribedYears),
+    confirmedBefore: yearsBefore(now, RETENTION.confirmedYears),
+    rateLimitBefore: daysBefore(now, RETENTION.rateLimitDays),
     eventsBefore,
   };
 }
@@ -82,7 +101,7 @@ function targets(sql, c) {
   if (c.eventsBefore) {
     list.push({
       key: "events",
-      label: "計測イベント（Gate 0 の判断から 1 年。判断日より前のもの）",
+      label: "計測イベント（Gate 0 の判断から 1 年。判断後の記録は記録から 1 年）",
       table: sql`waitlist.events`,
       where: sql`occurred_at < ${c.eventsBefore}`,
     });
