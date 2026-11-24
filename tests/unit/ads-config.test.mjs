@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ADS, landingUrl, VIDEO } from "../../scripts/ads/ads.config.mjs";
+import { ADS, landingUrl, LP_URL, VIDEO } from "../../scripts/ads/ads.config.mjs";
 
 const textOf = (ad) => [ad.headline, ad.primaryText, ad.cta, ...ad.scenes.flatMap((s) => [...s.lines, s.sub ?? ""])].join("\n");
 
@@ -21,6 +21,21 @@ describe("広告素材の定義（G0-7）", () => {
       expect(ad.utm.utm_content).toBe(ad.id);
       for (const v of Object.values(ad.utm)) expect(v).toMatch(/^[A-Za-z0-9_.-]{1,100}$/);
     }
+  });
+  it("遷移先は本番の LP（ohuro-quest.com）で、広告ごとに utm_content が違う（Issue #47）", () => {
+    expect(LP_URL).toBe("https://ohuro-quest.com/");
+    const urls = ADS.map((a) => new URL(landingUrl(a)));
+    for (const [i, u] of urls.entries()) {
+      expect(u.origin).toBe("https://ohuro-quest.com");
+      expect(u.pathname).toBe("/");
+      expect(u.searchParams.get("utm_source")).toBe("instagram");
+      expect(u.searchParams.get("utm_medium")).toBe("paid_social");
+      expect(u.searchParams.get("utm_campaign")).toBe("gate0");
+      expect(u.searchParams.get("utm_content")).toBe(ADS[i].id);
+      // テスト流入の印（ohuro_test）を広告の URL に付けない
+      expect(u.searchParams.has("ohuro_test")).toBe(false);
+    }
+    expect(new Set(urls.map((u) => u.searchParams.get("utm_content"))).size).toBe(ADS.length);
   });
   it("同じ LP に、広告ごとの UTM を付けて誘導する", () => {
     const urls = ADS.map((a) => landingUrl(a, "https://ohuro.example/"));

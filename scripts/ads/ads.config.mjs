@@ -6,7 +6,8 @@
 // - 受け手の状態・属性を決めつけない（「あなたは〜」を使わない）。医学的効果・効果の実証を示唆しない
 // - 報酬を誇張しない。存在しないレビュー・評価・利用者数を載せない
 
-export const LP_URL = "https://（公開URLは未定）/";
+// LP の公開 URL（所有者が 2026-11-24 に購入したドメイン。DECISIONS.md D-014）
+export const LP_URL = "https://ohuro-quest.com/";
 
 const utm = (content) => ({
   utm_source: "instagram",
@@ -54,7 +55,7 @@ export const ADS = [
   },
 ];
 
-/** 広告から LP への URL（UTM 付き）。LP の公開 URL が決まったら LP_URL を更新する */
+/** 広告から LP への URL（UTM 付き）。LP の URL を変えたら `npm run ads:render` で作り直す */
 export function landingUrl(ad, base = LP_URL) {
   const q = new URLSearchParams(ad.utm).toString();
   return `${base}?${q}`;

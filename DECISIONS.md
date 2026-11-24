@@ -231,3 +231,20 @@ AI（Claude Code / Codex）は「提案」までしか記録できない。状�
 - 保留:
   - 送信用ドメイン・LP のドメイン
   - 委託先（Supabase・Vercel・Resend）の所在国・保存地域、法務チェックリストの確認（確認後に `/privacy` の草案表示と `CONSENT_VERSION` の `-draft` を外す）
+
+## D-014: Gate 0 のドメイン（ohuro-quest.com）
+- 日付: 2026-11-24
+- 状態: 決定（所有者が購入済み）
+- 種別: サービス選定・費用
+- 提案者: Claude Code（候補の空き状況と価格を Vercel で確認して提示）
+- 承認者: 所有者（2026-11-24 のセッション内で「vercel で買います」と回答し、購入）
+- 承認の証跡: セッション内の所有者の回答、Vercel のドメイン一覧（ohuro-quest.com、自動更新オン、期限 2027-11-24）、Issue #47
+- 変更内容:
+  1. LP のドメインは `ohuro-quest.com`（Vercel で購入。DNS は Vercel が管理。自動更新オン）
+  2. メールの送信用ドメインはサブドメイン `mail.ohuro-quest.com`（Resend で認証する）
+  3. 本番の `APP_BASE_URL` は `https://ohuro-quest.com`、送信元は `おふろクエスト <noreply@mail.ohuro-quest.com>`
+  4. 広告の遷移先（`scripts/ads/ads.config.mjs` の `LP_URL`）は `https://ohuro-quest.com/`
+  5. 費用: 購入時の Vercel の表示で 1 年あたり約 12 ドル（確定額は Vercel の請求で所有者が確認）。サービスの月額と同じく、Gate 0 の予算 15,000 円とは別に管理する（D-013 の 8）
+- 変更理由: Resend の送信元の認証にドメインが必要なため。広告から来た人に、見慣れたドメインの LP を見せるため
+- 影響する文書・コード: scripts/ads/ads.config.mjs、marketing/ads/*/copy.md、docs/gates/GATE_0_LAUNCH_RUNBOOK.md
+- 保留: なし（D-013 の保留欄の「送信用ドメイン・LP のドメイン」はこの記録で決定）

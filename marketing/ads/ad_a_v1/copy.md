@@ -3,7 +3,7 @@
 自動生成ファイル（編集は scripts/ads/ads.config.mjs）。
 
 - 目的: ペット育成・無料ガチャへの興味を検証する
-- 遷移先 URL: `https://（公開URLは未定）/?utm_source=instagram&utm_medium=paid_social&utm_campaign=gate0&utm_content=ad_a_v1`（LP の公開 URL 確定後に ads.config.mjs の LP_URL を更新して再生成）
+- 遷移先 URL: `https://ohuro-quest.com/?utm_source=instagram&utm_medium=paid_social&utm_campaign=gate0&utm_content=ad_a_v1`（広告マネージャーにはこの URL をそのまま貼る。UTM を消さない・書き換えない）
 
 ## 入稿テキスト（掲載用）
 | 項目 | 内容 |
