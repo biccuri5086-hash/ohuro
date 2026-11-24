@@ -1,7 +1,8 @@
 // 同意文面とプライバシーポリシーの版（クライアント・サーバー共通の唯一の定義）。
 // 文面を変えたら版を上げる。登録時にこの版を保存する（waitlist.signups.consent_version）。
 // "-draft" が付いている間は法務確認前（docs/legal/GATE0_LEGAL_CHECKLIST.md）。公開前に所有者が確定する。
-export const CONSENT_VERSION = "2026-11-18-draft";
+// 2026-11-24: プライバシーポリシーに保存期間を記載（D-013）。法務確認（委託先の所在国など）が済むまで "-draft" のまま
+export const CONSENT_VERSION = "2026-11-24-draft";
 
 export const CONSENT_TEXT_REQUIRED =
   "プライバシーポリシーに同意し、おふろクエストのリリース情報（公開のお知らせ等）をメールで受け取ります（必須）";
