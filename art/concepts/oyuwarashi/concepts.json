@@ -1,0 +1,45 @@
+{
+  "title": "お湯わらし デザイン案（承認前の案・Issue #52）",
+  "note": "開発中のコンセプトです。承認前のため、LP・広告・アプリには使っていません。色と線は現行のパレットの範囲だけを使っています。",
+  "status": "案（所有者の承認待ち）",
+  "compareWith": "art/src/pet.svg",
+  "provenance": {
+    "author": "おふろクエスト開発（所有者の指示により Claude Code が SVG コードとして作成）",
+    "method": "手書きの SVG コード。画像生成 AI は使っていない（D-012）。既存の作品のキャラクターを参照していない",
+    "createdAt": "2026-11-24",
+    "license": "所有者が確認して確定する",
+    "commercialUse": "所有者が確認して確定する（自作のため制約はない見込み）"
+  },
+  "concepts": [
+    {
+      "id": "a",
+      "title": "案A 湯気の子",
+      "description": "湯気でできた体の精。頭の湯気の房が、育つと 3 つの冠になる。現行のタオルを、成体のマントとして残す",
+      "keepsCore": "湯気とタオルを残す（現行のペットに最も近い）",
+      "stages": [
+        { "file": "a1-yuge-young.svg", "label": "幼体" },
+        { "file": "a2-yuge-adult.svg", "label": "成体" }
+      ]
+    },
+    {
+      "id": "b",
+      "title": "案B 泡の子",
+      "description": "泡のまるい体の精。育つと泡の冠とミント色のひれが付く。軽くて明るい印象",
+      "keepsCore": "湯気・タオルの代わりに泡を核にする（作り替え）",
+      "stages": [
+        { "file": "b1-awa-young.svg", "label": "幼体" },
+        { "file": "b2-awa-adult.svg", "label": "成体" }
+      ]
+    },
+    {
+      "id": "c",
+      "title": "案C 桶の子",
+      "description": "湯おけに住む精。幼体は桶から顔を出し、成体は桶のかぶと・タオルのはちまき・ひしゃくの杖で冒険する。バトルの役割と合わせやすい",
+      "keepsCore": "体の色と湯気・タオルを残し、湯おけと若葉を加える",
+      "stages": [
+        { "file": "c1-oke-young.svg", "label": "幼体" },
+        { "file": "c2-oke-adult.svg", "label": "成体" }
+      ]
+    }
+  ]
+}
