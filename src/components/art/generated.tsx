@@ -62,12 +62,6 @@ export function RoomIllustration({ className, title = "2Dマイホームのイ�
       <rect x="110" y="96" width="96" height="34" rx="12" fill="#f39c8b" stroke="#5b3f33" strokeWidth="3" />
       <rect x="104" y="108" width="18" height="24" rx="8" fill="#f39c8b" stroke="#5b3f33" strokeWidth="3" />
       <rect x="194" y="108" width="18" height="24" rx="8" fill="#f39c8b" stroke="#5b3f33" strokeWidth="3" />
-      <g transform="translate(130 64) scale(0.48)">
-        <path d="M20 82c0-26 18-44 40-44s40 18 40 44c0 16-14 24-40 24S20 98 20 82z" fill="#ffd6bf" stroke="#5b3f33" strokeWidth="6" />
-        <circle cx="47" cy="74" r="5" fill="#5b3f33" />
-        <circle cx="73" cy="74" r="5" fill="#5b3f33" />
-        <path d="M36 46c8-10 40-10 48 0l-4 8c-10-6-30-6-40 0z" fill="#ffffff" stroke="#5b3f33" strokeWidth="5" />
-      </g>
       <ellipse cx="160" cy="150" rx="70" ry="10" fill="#bfe0c8" stroke="#5b3f33" strokeWidth="2.5" />
     </svg>
   );

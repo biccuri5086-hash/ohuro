@@ -1,25 +1,28 @@
 #!/usr/bin/env node
 // 広告素材の生成（Issue #15）。ads.config.mjs を元に、シーン画像 → 縦型動画（MP4・無音）・サムネイル・確認用の一覧画像を作る。
 // 必要なもの: Playwright（Chromium）、ffmpeg、日本語フォント（IPAGothic）。CI では実行しない（生成物をコミットする）。
-// 使用素材: ペットは正本 art/src/pet.svg（生成: art.generated.mjs）、それ以外は本スクリプト内のオリジナル SVG。フォントは IPA ゴシック（art/ASSETS.json に記録）。
+// 使用素材: キャラクターは画像生成 AI のコンセプト画像（src/assets/characters/*.webp、台帳 art/characters.json、D-015）、
+// それ以外は本スクリプト内のオリジナル SVG。フォントは IPA ゴシック（art/ASSETS.json に記録）。
 import { execFileSync } from "node:child_process";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
 import { ADS, landingUrl, VIDEO } from "./ads.config.mjs";
-import { ART as ART_ASSETS } from "./art.generated.mjs";
 
 const require = createRequire(import.meta.url);
 const OUT = join(process.cwd(), "marketing", "ads");
 const L = "#5b3f33";
 
-// ペットの絵は正本 art/src/pet.svg から生成したものを使う（Issue #24。ここで描かない）
-const PET = ART_ASSETS.pet.inner;
+// キャラクターの画像（Issue #54）。SVG の場面の中に data URI で埋め込む（外部の読み込みをしない）
+function character(id, x, y, size, extra = "") {
+  const b64 = readFileSync(join(process.cwd(), "src", "assets", "characters", `${id}.webp`)).toString("base64");
+  return `<image href="data:image/webp;base64,${b64}" x="${x}" y="${y}" width="${size}" height="${size}"${extra}/>`;
+}
 
 const coin = (x, y, r = 34) => `<g transform="translate(${x} ${y})"><circle r="${r}" fill="#ffd35c" stroke="${L}" stroke-width="6"/><circle r="${r * 0.62}" fill="none" stroke="#e3a92a" stroke-width="5"/><circle cx="${-r * 0.25}" cy="${-r * 0.2}" r="${r * 0.14}" fill="#fff"/></g>`;
 
 const ART = {
-  "pet-coins": `<svg viewBox="0 0 600 520"><g transform="translate(150 60) scale(2.5)">${PET}</g>${coin(110, 380)}${coin(500, 360)}${coin(470, 120, 28)}${coin(130, 150, 26)}</svg>`,
+  "pet-coins": `<svg viewBox="0 0 600 520">${character("furopen", 100, 10, 400)}${coin(110, 380)}${coin(500, 360)}${coin(470, 120, 28)}${coin(130, 150, 26)}</svg>`,
   gacha: `<svg viewBox="0 0 600 560">
     <rect x="150" y="250" width="300" height="260" rx="28" fill="#f39c8b" stroke="${L}" stroke-width="8"/>
     <circle cx="300" cy="200" r="150" fill="#e8f5fb" stroke="${L}" stroke-width="8"/>
@@ -29,7 +32,7 @@ const ART = {
     <rect x="250" y="450" width="100" height="40" rx="10" fill="#fff4e4" stroke="${L}" stroke-width="6"/>
     ${coin(500, 430, 40)}</svg>`,
   collection: `<svg viewBox="0 0 600 520">
-    <g transform="translate(60 120) scale(2)">${PET}</g>
+    ${character("mizuhane", 10, 80, 340)}
     <path d="M150 120l40-40 40 40z" fill="#6fb3dd" stroke="${L}" stroke-width="6" stroke-linejoin="round"/>
     <rect x="360" y="240" width="160" height="90" rx="20" fill="#f39c8b" stroke="${L}" stroke-width="6"/><rect x="350" y="290" width="30" height="70" rx="12" fill="#f39c8b" stroke="${L}" stroke-width="6"/><rect x="500" y="290" width="30" height="70" rx="12" fill="#f39c8b" stroke="${L}" stroke-width="6"/>
     <rect x="420" y="60" width="16" height="140" fill="${L}"/><path d="M380 60h96l-20 50h-56z" fill="#ffd35c" stroke="${L}" stroke-width="6" stroke-linejoin="round"/>
@@ -40,7 +43,7 @@ const ART = {
     <rect x="56" y="60" width="140" height="112" rx="10" fill="#cfe9f7" stroke="${L}" stroke-width="6"/><path d="M126 60v112M56 116h140" stroke="${L}" stroke-width="6"/>
     <rect x="452" y="90" width="140" height="200" rx="10" fill="#d9a877" stroke="${L}" stroke-width="6"/><path d="M452 156h140M452 222h140" stroke="${L}" stroke-width="6"/>
     <rect x="220" y="216" width="190" height="72" rx="22" fill="#f39c8b" stroke="${L}" stroke-width="6"/>
-    <g transform="translate(255 120) scale(1)">${PET}</g>
+    ${character("yuzunyan", 225, 85, 190)}
     <ellipse cx="320" cy="340" rx="140" ry="20" fill="#bfe0c8" stroke="${L}" stroke-width="5"/></svg>`,
   "phone-night": `<svg viewBox="0 0 600 600">
     <rect x="170" y="40" width="260" height="500" rx="40" fill="#2e3a59" stroke="${L}" stroke-width="10"/>
@@ -52,7 +55,7 @@ const ART = {
     <rect x="40" y="40" width="520" height="480" rx="40" fill="#2e3a59" stroke="${L}" stroke-width="8"/>
     <path d="M360 140a120 120 0 1 0 80 200 100 100 0 1 1-80-200z" fill="#ffd35c" stroke="${L}" stroke-width="6"/>
     <circle cx="150" cy="140" r="8" fill="#fff"/><circle cx="210" cy="250" r="6" fill="#fff"/><circle cx="480" cy="120" r="7" fill="#fff"/><circle cx="120" cy="380" r="6" fill="#fff"/>
-    <g transform="translate(90 330) scale(1.3)" opacity="0.95">${PET}</g></svg>`,
+    ${character("kuragera", 60, 270, 240, ' opacity="0.95"')}</svg>`,
   quest: `<svg viewBox="0 0 600 560">
     <rect x="60" y="40" width="480" height="480" rx="32" fill="#fff" stroke="${L}" stroke-width="8"/>
     <rect x="60" y="40" width="480" height="90" rx="32" fill="#2b7bb9"/><rect x="60" y="100" width="480" height="30" fill="#2b7bb9"/>
@@ -63,7 +66,7 @@ const ART = {
     <rect x="196" y="${192 + i * 110}" width="${[260, 220, 180][i]}" height="32" rx="16" fill="#f1e4d6"/>`,
       )
       .join("")}</svg>`,
-  cta: `<svg viewBox="0 0 600 480"><g transform="translate(150 20) scale(2.5)">${PET}</g></svg>`,
+  cta: `<svg viewBox="0 0 600 480">${character("yuzukapi", 20, 20, 300)}${character("mizuhane", 280, 0, 310)}</svg>`,
 };
 
 function sceneHtml(scene) {

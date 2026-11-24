@@ -7,6 +7,7 @@
   - 全画面 2D。3D 化しない
   - 現在のキャラクター・世界観を出発点にし、勝手に変えない。変更は「案」として提示し、承認後に実装する（Issue #27）
   - Figma・Frontend Design Plugin は導入しない。追加の有料サービスは事前承認が必要
+  - **D-015（2026-11-24）で一部変更**: Gate 0 の LP・広告のコンセプト画像に限り、画像生成 AI（ChatGPT）のキャラクター画像を使う。台帳は `art/characters.json`、画像は `src/assets/characters/`
 
 ## 文書一覧
 
