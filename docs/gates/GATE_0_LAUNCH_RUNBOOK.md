@@ -12,8 +12,8 @@
 | ホスティング | Vercel Pro | 決定（D-013） | Hobby は規約上、非商用の個人利用に限られるため（vercel.com/docs/plans/hobby） |
 | データベース | Supabase Pro | 決定・契約済み（D-013） | 無料プランは利用が少ない状態が 7 日続くと一時停止するため（supabase.com/docs/guides/platform/free-project-pausing） |
 | メール送信 | Resend 無料プラン | 決定（D-013） | 月 3,000 通・1 日 100 通まで（resend.com の料金ページ）。1 日の登録が 100 件を超えると確認メールが送れなくなる。下記 7.3 |
-| 送信用ドメイン | 未定 | **未決定** | Resend で送信元として認証するドメインが必要（DNS の設定ができるもの）。LP の独自ドメインと兼ねてもよい |
-| LP のドメイン | 未定 | **未決定** | `*.vercel.app` のままでも公開はできる。独自ドメインは取得費用がかかる |
+| 送信用ドメイン | `mail.ohuro-quest.com` | 決定（D-014） | Resend で認証する。DNS レコードは Vercel の DNS 画面で追加する |
+| LP のドメイン | `ohuro-quest.com` | 決定・購入済み（D-014） | Vercel で購入。自動更新オン。DNS は Vercel |
 | 運営者名 | 決定 | 決定（D-013） | 値はリポジトリに書かず、Vercel の環境変数 `OPERATOR_NAME` に設定する |
 | 問い合わせ先 | メールアドレス | 決定（D-013） | 値はリポジトリに書かず、Vercel の環境変数 `OPERATOR_CONTACT` に設定する。確認メールとプライバシーポリシーで公開される |
 | 登録データの保存期間 | 推奨案（付録 A の「決定」列） | 決定（D-013） | プライバシーポリシーに記載済み。削除は 8 章の手順で所有者が実行する |
@@ -54,7 +54,7 @@ Claude は手順 1〜5・7 の操作（プロジェクト作成・マイグレ�
 - [ ] アカウントを作る（無料プラン）
 - [ ] 送信用ドメインを追加し、表示される DNS レコード（SPF・DKIM など）をドメインの管理画面に登録して、認証済みになるまで待つ
 - [ ] API キーを作る（権限は送信のみ）。値は Vercel の環境変数にだけ入れる
-- [ ] 送信元アドレスを決める（例: `おふろクエスト <noreply@送信用ドメイン>`）→ `EMAIL_FROM`
+- [ ] 送信元アドレス: `おふろクエスト <noreply@mail.ohuro-quest.com>`（D-014）→ `EMAIL_FROM`
 
 ### 2.3 Vercel（手順 4）
 - [ ] Pro に切り替える（またはチームを作る）。Spend Management で月の上限と通知を設定する
@@ -64,11 +64,11 @@ Claude は手順 1〜5・7 の操作（プロジェクト作成・マイグレ�
 | 名前 | 値 | 注意 |
 |---|---|---|
 | `WAITLIST_DATABASE_URL` | 2.1 の接続文字列 | 秘密。Sensitive にする |
-| `APP_BASE_URL` | 公開 URL（例: `https://xxxx.vercel.app`） | 末尾の `/` なし。確認リンクと Origin の検査に使う |
+| `APP_BASE_URL` | `https://ohuro-quest.com` | 末尾の `/` なし。確認リンクと Origin の検査に使う |
 | `RATE_LIMIT_SECRET` | 32 文字以上のランダム値 | 秘密。パスワード管理ツールで生成 |
 | `EMAIL_PROVIDER` | `resend` | Vercel 上では `console` は起動時に拒否される |
 | `RESEND_API_KEY` | 2.2 の API キー | 秘密 |
-| `EMAIL_FROM` | 2.2 の送信元 | |
+| `EMAIL_FROM` | `おふろクエスト <noreply@mail.ohuro-quest.com>` | |
 | `OPERATOR_NAME` | 運営者名 | リポジトリには書かない |
 | `OPERATOR_CONTACT` | 問い合わせ先 | リポジトリには書かない。未設定だとメールとポリシーに「公開前に記入」と出る |
 
@@ -85,7 +85,7 @@ Claude は手順 1〜5・7 の操作（プロジェクト作成・マイグレ�
 
 公開した直後に、所有者が自分のメールアドレスで次を確かめる。テストとして集計から外すため、URL に `?ohuro_test=1` を付け、メールアドレスに `+ohuro-test` を付ける（EXPERIMENT_PLAN.md 4.4）。
 
-1. `https://<公開URL>/?ohuro_test=1` を開き、`自分+ohuro-test@…` で登録する
+1. `https://ohuro-quest.com/?ohuro_test=1` を開き、`自分+ohuro-test@…` で登録する
 2. 確認メールが届く（迷惑メールフォルダも確認）。送信者名・問い合わせ先・配信停止リンクが表示されている
 3. メールのリンク → 確認ページ → 確認ボタンで登録完了になる
 4. 任意アンケートに答えられる
