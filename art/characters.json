@@ -1,0 +1,144 @@
+{
+  "note": "画像生成 AI で作ったキャラクター画像の台帳（Issue #54、DECISIONS.md D-015）。Gate 0 の LP・広告のコンセプト画像に限って使う",
+  "termsCheck": {
+    "status": "商用利用は可能と所有者が ChatGPT の規約で確認（2026-11-25）。生成物の権利の扱いは未記録",
+    "items": [
+      "商用利用（広告を含む）: 可（所有者確認）",
+      "生成物の権利: 未記録"
+    ],
+    "checkedAt": "2026-11-25",
+    "checkedBy": "所有者"
+  },
+  "excluded": [
+    {
+      "id": "yupurin",
+      "reason": "有名なゲームの代表的なモンスターに似ているおそれがあるため取り込まない（作り直し後に再検討）"
+    },
+    {
+      "id": "awamoko",
+      "reason": "未受領"
+    }
+  ],
+  "characters": [
+    {
+      "id": "furopen",
+      "nameJa": "ふろペン",
+      "file": "src/assets/characters/furopen.webp",
+      "sha256": "d02104ea144437760c767156673c0e403b858bb6b5c1505cac3a5a70601ffcd0",
+      "source": {
+        "service": "ChatGPT（画像生成）",
+        "generatedAt": "2026-11-24",
+        "generatedBy": "所有者",
+        "promptTemplate": "art/prompts/character-template.md",
+        "originalSha256": "5d6147e6f44296611b4f1926288cb1413b1d28594ff10f602e9f32798164e985",
+        "originalSize": "1024x1024 PNG"
+      },
+      "processing": "四隅からつながる白い背景を透明化し、512x512 の WebP（品質 85）に変換（Claude Code）"
+    },
+    {
+      "id": "kuragera",
+      "nameJa": "くらげら",
+      "file": "src/assets/characters/kuragera.webp",
+      "sha256": "0076cb03794d96bd9e9df62d7ffbe4c13bc67dfafbb555b5c88f82663f313b10",
+      "source": {
+        "service": "ChatGPT（画像生成）",
+        "generatedAt": "2026-11-24",
+        "generatedBy": "所有者",
+        "promptTemplate": "art/prompts/character-template.md",
+        "originalSha256": "6f5c1a37ec11bd83df7fa09d9b5530cc2b119b92e9e2f08e6ec27636398922fb",
+        "originalSize": "1024x1024 PNG"
+      },
+      "processing": "四隅からつながる白い背景を透明化し、512x512 の WebP（品質 85）に変換（Claude Code）"
+    },
+    {
+      "id": "mizuhane",
+      "nameJa": "みずはね",
+      "file": "src/assets/characters/mizuhane.webp",
+      "sha256": "86bc1d3d01f325ee462b6bc2222afd20e401cffb85a55869cb9a54782f27f9ee",
+      "source": {
+        "service": "ChatGPT（画像生成）",
+        "generatedAt": "2026-11-24",
+        "generatedBy": "所有者",
+        "promptTemplate": "art/prompts/character-template.md",
+        "originalSha256": "deaa212910846c2540594b87fbbbce90ad1a86db24399d7f6dda81c44e899225",
+        "originalSize": "1024x1024 PNG"
+      },
+      "processing": "四隅からつながる白い背景を透明化し、512x512 の WebP（品質 85）に変換（Claude Code）"
+    },
+    {
+      "id": "rakkoru",
+      "nameJa": "らっこる",
+      "file": "src/assets/characters/rakkoru.webp",
+      "sha256": "acd04b5789be4982d677160b5877841f1d9a33ce43992a960b1a42c6e00a319f",
+      "source": {
+        "service": "ChatGPT（画像生成）",
+        "generatedAt": "2026-11-24",
+        "generatedBy": "所有者",
+        "promptTemplate": "art/prompts/character-template.md",
+        "originalSha256": "fcd591f3d7633a00d364db1cc1ef2f4935816d0fcde1d6f4233cbc21fd0842a0",
+        "originalSize": "1024x1024 PNG"
+      },
+      "processing": "四隅からつながる白い背景を透明化し、512x512 の WebP（品質 85）に変換（Claude Code）"
+    },
+    {
+      "id": "ryuusei",
+      "nameJa": "りゅうせい",
+      "file": "src/assets/characters/ryuusei.webp",
+      "sha256": "3526bd8d36e1aef353da97ab3cfbdfea1714f70f0ad16ba991603e45bcaded41",
+      "source": {
+        "service": "ChatGPT（画像生成）",
+        "generatedAt": "2026-11-24",
+        "generatedBy": "所有者",
+        "promptTemplate": "art/prompts/character-template.md",
+        "originalSha256": "b69bcadcacfbab1e7925f3a5c69dbdd99bd25638c1c1d8674ddaa11a34d4f5c5",
+        "originalSize": "1024x1024 PNG"
+      },
+      "processing": "四隅からつながる白い背景を透明化し、512x512 の WebP（品質 85）に変換（Claude Code）"
+    },
+    {
+      "id": "yugekitsune",
+      "nameJa": "ゆげきつね",
+      "file": "src/assets/characters/yugekitsune.webp",
+      "sha256": "225dac315f4b79bb1a3cb9d768f00ec132aa2311e0e4bcad55b0f604a6e1c3bf",
+      "source": {
+        "service": "ChatGPT（画像生成）",
+        "generatedAt": "2026-11-24",
+        "generatedBy": "所有者",
+        "promptTemplate": "art/prompts/character-template.md",
+        "originalSha256": "5bb41aff764240fa798c4cf1ac3bf87e5881210acd74fbce15ea61b49867f40f",
+        "originalSize": "1024x1024 PNG"
+      },
+      "processing": "四隅からつながる白い背景を透明化し、512x512 の WebP（品質 85）に変換（Claude Code）"
+    },
+    {
+      "id": "yuzukapi",
+      "nameJa": "ゆずかぴ",
+      "file": "src/assets/characters/yuzukapi.webp",
+      "sha256": "84e2383f582f0d23ddcce371e6a5f64a883df042fe9777bdc19f9c1f3fb710ec",
+      "source": {
+        "service": "ChatGPT（画像生成）",
+        "generatedAt": "2026-11-24",
+        "generatedBy": "所有者",
+        "promptTemplate": "art/prompts/character-template.md",
+        "originalSha256": "54166640bc1a9bf4bd8c5da6c75874e0809bff3bc1b4156554cf8da09e1cff6b",
+        "originalSize": "1024x1024 PNG"
+      },
+      "processing": "四隅からつながる白い背景を透明化し、512x512 の WebP（品質 85）に変換（Claude Code）"
+    },
+    {
+      "id": "yuzunyan",
+      "nameJa": "ゆずにゃん",
+      "file": "src/assets/characters/yuzunyan.webp",
+      "sha256": "c6852793b7876f768f73d2d6209c4e4d61cc316f7a06878036ca5f02c6ffb145",
+      "source": {
+        "service": "ChatGPT（画像生成）",
+        "generatedAt": "2026-11-24",
+        "generatedBy": "所有者",
+        "promptTemplate": "art/prompts/character-template.md",
+        "originalSha256": "9bf5349a641af600dbbecf8f6a0c0861f6d690137e3785a2bb6c85352d40fdde",
+        "originalSize": "1024x1024 PNG"
+      },
+      "processing": "四隅からつながる白い背景を透明化し、512x512 の WebP（品質 85）に変換（Claude Code）"
+    }
+  ]
+}

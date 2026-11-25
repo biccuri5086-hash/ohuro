@@ -76,8 +76,8 @@ h3 {
 }
 
 .hero-pet {
-  width: 140px;
-  height: 140px;
+  width: 160px;
+  height: 160px;
   display: block;
   margin: 0 auto 8px;
 }
@@ -165,6 +165,19 @@ h3 {
   width: 100%;
   height: auto;
   display: block;
+}
+
+/* 部屋の絵のソファの上に、キャラクターの画像を重ねる（Issue #54） */
+.room-stage {
+  position: relative;
+}
+
+.room-character {
+  position: absolute;
+  left: 37%;
+  top: 22%;
+  width: 26%;
+  height: auto;
 }
 
 /* 写真チェック */
