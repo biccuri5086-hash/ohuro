@@ -100,12 +100,13 @@ describe("素材台帳と生成（Issue #24）", () => {
     expect(buildArt(process.cwd()).outputs).toEqual(buildArt(process.cwd()).outputs);
   });
 
-  it("LP と広告は生成物だけを使い、ペットの絵を手で描いていない（重複の解消）", () => {
+  it("LP と広告は生成物・台帳のある素材だけを使い、ペットの絵を手で描いていない（重複の解消）", () => {
     const illus = readFileSync("src/components/lp/Illustrations.tsx", "utf8");
     expect(illus).toContain('from "@/components/art/generated"');
     expect(illus).not.toMatch(/<path|<circle/);
     const ads = readFileSync("scripts/ads/render-ads.mjs", "utf8");
-    expect(ads).toContain("ART_ASSETS.pet.inner");
+    // 広告のキャラクターは、台帳（art/characters.json）にある画像を読み込む（Issue #54・D-015）
+    expect(ads).toContain('"src", "assets", "characters"');
     expect(ads).not.toContain("M20 82c0-26 18-44 40-44");
   });
 });

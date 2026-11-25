@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { CoinIcon, PetIllustration, PhoneIcon, RoomIllustration, TowelIcon } from "@/components/lp/Illustrations";
+import { CharacterImage } from "@/components/lp/Characters";
+import { CoinIcon, PhoneIcon, RoomIllustration, TowelIcon } from "@/components/lp/Illustrations";
 import { PageViewTracker, TrackedSignupForm } from "@/components/lp/Tracking";
 
 export const metadata: Metadata = {
@@ -27,7 +28,7 @@ const FEATURES = [
   {
     title: "ペットを|育てる",
     body: "お風呂に入るほど、いっしょに暮らすペットが育っていく予定です。",
-    icon: <PetIllustration className="feature-icon" title="ペット" />,
+    icon: <CharacterImage id="furopen" className="feature-icon" sizes="64px" />,
   },
   {
     title: "家具や衣装を|集める",
@@ -71,7 +72,7 @@ export default function Home() {
       <PageViewTracker />
       <header className="hero">
         <p className="badge">開発中のアプリです・公開日未定</p>
-        <PetIllustration className="hero-pet" />
+        <CharacterImage id="mizuhane" className="hero-pet" priority sizes="160px" />
         <h1 className="hero-title">
           <span className="nb">お風呂が、</span>
           <span className="nb">毎日の小さな</span>
@@ -122,7 +123,10 @@ export default function Home() {
           ))}
         </ul>
         <figure className="room">
-          <RoomIllustration className="room-image" />
+          <div className="room-stage">
+            <RoomIllustration className="room-image" />
+            <CharacterImage id="yuzunyan" className="room-character" sizes="120px" />
+          </div>
           <figcaption className="note">2Dマイホームのイメージ（開発中のコンセプトイメージです）</figcaption>
         </figure>
       </section>
