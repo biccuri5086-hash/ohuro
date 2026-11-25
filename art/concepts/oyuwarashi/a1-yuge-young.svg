@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- 案A 湯気の子（幼体）: 湯気でできた体。頭のてっぺんに湯気の房 -->
+  <path d="M22 62c-4-4 2-8-1-12M98 62c-4-4 2-8-1-12" stroke="#b9d9ec" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M53 54c-6-10 4-17 3-28c10 6 14 19 8 28z" fill="#fff4e4" stroke="#5b3f33" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M30 88c0-20 12-38 30-38s30 18 30 38c0 12-12 18-30 18s-30-6-30-18z" fill="#fff4e4" stroke="#5b3f33" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M41 70q4-6 10-6" stroke="#cfe9f7" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="50" cy="80" r="4" fill="#5b3f33"/>
+  <circle cx="70" cy="80" r="4" fill="#5b3f33"/>
+  <circle cx="48.6" cy="78.6" r="1.3" fill="#ffffff"/>
+  <circle cx="68.6" cy="78.6" r="1.3" fill="#ffffff"/>
+  <ellipse cx="42" cy="88" rx="5" ry="3" fill="#ffab9a"/>
+  <ellipse cx="78" cy="88" rx="5" ry="3" fill="#ffab9a"/>
+  <path d="M56 88q4 4 8 0" stroke="#5b3f33" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>

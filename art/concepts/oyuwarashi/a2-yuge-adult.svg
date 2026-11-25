@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <!-- 案A 湯気の子（成体）: 湯気の房が 3 つの冠に。タオルのマント -->
+  <circle cx="14" cy="42" r="3" fill="#b9d9ec"/>
+  <circle cx="106" cy="46" r="2.5" fill="#b9d9ec"/>
+  <path d="M37 52c-10-6-7-17-11-25c11 2 19 11 19 23zM83 52c10-6 7-17 11-25c-11 2-19 11-19 23z" fill="#fff4e4" stroke="#5b3f33" stroke-width="3.5" stroke-linejoin="round"/>
+  <path d="M52 44c-8-12 4-21 5-36c11 9 15 24 7 36z" fill="#fff4e4" stroke="#5b3f33" stroke-width="3.5" stroke-linejoin="round"/>
+  <ellipse cx="20" cy="88" rx="7" ry="5" fill="#fff4e4" stroke="#5b3f33" stroke-width="3"/>
+  <ellipse cx="100" cy="88" rx="7" ry="5" fill="#fff4e4" stroke="#5b3f33" stroke-width="3"/>
+  <path d="M22 84c0-24 16-42 38-42s38 18 38 42c0 14-14 22-38 22s-38-8-38-22z" fill="#fff4e4" stroke="#5b3f33" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M34 62q5-8 13-8" stroke="#cfe9f7" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M33 94c14 8 40 8 54 0l2 8c-16 9-42 9-58 0z" fill="#ffffff" stroke="#5b3f33" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M38 99c14 6 30 6 44 0" stroke="#6fb3dd" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <circle cx="48" cy="74" r="4.5" fill="#5b3f33"/>
+  <circle cx="72" cy="74" r="4.5" fill="#5b3f33"/>
+  <circle cx="46.5" cy="72.5" r="1.4" fill="#ffffff"/>
+  <circle cx="70.5" cy="72.5" r="1.4" fill="#ffffff"/>
+  <ellipse cx="38" cy="83" rx="6" ry="3.5" fill="#ffab9a"/>
+  <ellipse cx="82" cy="83" rx="6" ry="3.5" fill="#ffab9a"/>
+  <path d="M55 82q5 5 10 0" stroke="#5b3f33" stroke-width="3" fill="none" stroke-linecap="round"/>
+</svg>
